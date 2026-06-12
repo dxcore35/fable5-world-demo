@@ -27,6 +27,12 @@ import { qualityConfig, setActiveWorldSize } from '../world/WorldConst';
 import { buildGavdosHeightfield } from '../gavdos/GavdosWorld';
 import { GAVDOS_WORLD_SIZE } from '../gavdos/GavdosConst';
 import { GavdosOcean } from '../gavdos/GavdosOcean';
+import {
+  buildGavdosVegLibrary,
+  runGavdosScatter,
+  placeGavdosRocks,
+  GAVDOS_DRY_BIAS,
+} from '../gavdos/GavdosVeg';
 import { TerrainTiles } from '../world/TerrainTiles';
 import { WaterSurface } from '../world/WaterSurface';
 import { PostStack } from '../render/PostStack';
@@ -92,7 +98,17 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // heightfield; the canopy map is their only knowledge of the forest) and
   // before tiles (under-crown ambient)
   ctx.progress(0.94, 'vegetation: scattering instances');
-  const scatter = await runScatter(engine.renderer, hf, seed);
+  let scatter: Awaited<ReturnType<typeof runScatter>>;
+  if (params.world === 'gavdos' && hf.gavdosVegData !== null) {
+    // Gavdos: CPU-driven Mediterranean scatter (species.bin × weights.bin)
+    const gavdosScatter = await runGavdosScatter(engine.renderer, hf.gavdosVegData);
+    // Wire rocks.json detected boulders into the extras layer
+    const rocksPlaced = await placeGavdosRocks(gavdosScatter, hf.gavdosVegData);
+    console.log(`[gavdos] scatter: trees=${gavdosScatter.trees.count} under=${gavdosScatter.understory.count} extras=${gavdosScatter.extras.count} stones=${gavdosScatter.stones.count} rocksJson=${rocksPlaced}`);
+    scatter = gavdosScatter as unknown as typeof scatter;
+  } else {
+    scatter = await runScatter(engine.renderer, hf, seed);
+  }
   const canopyTex = await buildCanopyMap(engine.renderer, scatter.trees);
   engine.stats.counters['veg.trees'] = scatter.trees.count;
   engine.stats.counters['veg.under'] = scatter.understory.count;
@@ -200,9 +216,11 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // Phase 5: variant pools + GPU cull → compacted indirect draws
   let forestsRef: Forests | null = null;
   if (view !== 'scatter' && !ablate.has('veg')) {
-    const lib = await buildVegLibrary(engine.renderer, seed, (p, m) =>
-      ctx.progress(0.963 + p * 0.006, m),
-    );
+    const lib = params.world === 'gavdos'
+      ? await buildGavdosVegLibrary(engine.renderer, seed, (p, m) =>
+          ctx.progress(0.963 + p * 0.006, m))
+      : await buildVegLibrary(engine.renderer, seed, (p, m) =>
+          ctx.progress(0.963 + p * 0.006, m));
     const forests = new Forests(
       hf,
       scatter,
@@ -221,8 +239,13 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
 
     // near-field carpets: 800k-blade grass ring + 80k debris ring
     if (!ablate.has('grass')) {
-      const ring = new GroundRing(hf, canopyTex, seed, ablate.has('gi') ? null : gi);
-      ring.init(lib.atlases.get('beech') ?? null);
+      const grassDryBias = params.world === 'gavdos' ? GAVDOS_DRY_BIAS : 0;
+      const ring = new GroundRing(hf, canopyTex, seed, ablate.has('gi') ? null : gi, grassDryBias);
+      // Gavdos: use phrygana foliage atlas for the grass layer atlas ref
+      const atlasRef = params.world === 'gavdos'
+        ? (lib.atlases.get('phrygana') ?? lib.atlases.get('gavdosJuniper') ?? null)
+        : lib.atlases.get('beech') ?? null;
+      ring.init(atlasRef);
       engine.scene.add(ring.group);
       engine.onUpdate(() => {
         ring.update(engine.renderer, engine.camera);

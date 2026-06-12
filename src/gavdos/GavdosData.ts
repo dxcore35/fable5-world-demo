@@ -204,6 +204,12 @@ export interface GavdosDataResult {
   noiseB: StorageTexture;
   cpuHeights: Float32Array;
   cpuWaterY: Float32Array;
+  /** Window-cropped and upsampled species map (uint8: 0=none,1=juniper,2=pine,3=olive,4=phrygana) */
+  cpuSpecies: Uint8Array;
+  /** Window-cropped and upsampled density weights (float32) */
+  cpuWeights: Float32Array;
+  /** Upsampled resolution (same as heightRes) */
+  vegRes: number;
 }
 
 export async function loadGavdosData(
@@ -214,24 +220,38 @@ export async function loadGavdosData(
 ): Promise<GavdosDataResult> {
   // --- 1. Fetch raw buffers ---------------------------------------------------
   onProgress(0.01, 'gavdos: fetching heightmap');
-  const [hmResp, maskResp] = await Promise.all([
+  const [hmResp, maskResp, specResp, wgtResp] = await Promise.all([
     fetch('/gavdos/heightmap.bin'),
     fetch('/gavdos/mask.bin'),
+    fetch('/gavdos/species.bin'),
+    fetch('/gavdos/weights.bin'),
   ]);
-  const [hmBuf, maskBuf] = await Promise.all([hmResp.arrayBuffer(), maskResp.arrayBuffer()]);
+  const [hmBuf, maskBuf, specBuf, wgtBuf] = await Promise.all([
+    hmResp.arrayBuffer(),
+    maskResp.arrayBuffer(),
+    specResp.arrayBuffer(),
+    wgtResp.arrayBuffer(),
+  ]);
   const srcHeight = new Float32Array(hmBuf);      // 2048×1664 float32
   const srcMask = new Uint8Array(maskBuf);        // 2048×1664 uint8
+  const srcSpecies = new Uint8Array(specBuf);     // 2048×1664 uint8
+  const srcWeights = new Float32Array(wgtBuf);    // 2048×1664 float32
 
   // --- 2. Window crop --------------------------------------------------------
   onProgress(0.06, 'gavdos: cropping to world window');
   const cropH = new Float32Array(CROP_W * CROP_H);
   const cropM = new Uint8Array(CROP_W * CROP_H);
+  const cropS = new Uint8Array(CROP_W * CROP_H);   // species
+  const cropW = new Float32Array(CROP_W * CROP_H); // weights
   for (let row = 0; row < CROP_H; row++) {
     const srcRow = CROP_Y0 + row;
     for (let col = 0; col < CROP_W; col++) {
       const srcCol = CROP_X0 + col;
-      cropH[row * CROP_W + col] = srcHeight[srcRow * SRC_WIDTH + srcCol] ?? 0;
-      cropM[row * CROP_W + col] = srcMask[srcRow * SRC_WIDTH + srcCol] ?? 0;
+      const si = srcRow * SRC_WIDTH + srcCol;
+      cropH[row * CROP_W + col] = srcHeight[si] ?? 0;
+      cropM[row * CROP_W + col] = srcMask[si] ?? 0;
+      cropS[row * CROP_W + col] = srcSpecies[si] ?? 0;
+      cropW[row * CROP_W + col] = srcWeights[si] ?? 0;
     }
   }
 
@@ -246,14 +266,24 @@ export async function loadGavdosData(
     }
   }
 
-  // --- 4. Nearest upsample mask to heightRes ----------------------------------
-  onProgress(0.30, 'gavdos: upsampling mask');
+  // --- 4. Nearest upsample mask / species / weights to heightRes -------------
+  onProgress(0.30, 'gavdos: upsampling mask + species + weights');
   const maskCpu = new Uint8Array(heightRes * heightRes);
+  const speciesCpu = new Uint8Array(heightRes * heightRes);
+  const weightsCpu = new Float32Array(heightRes * heightRes);
   for (let oy = 0; oy < heightRes; oy++) {
     const fy = (oy + 0.5) / heightRes * CROP_H - 0.5;
     for (let ox = 0; ox < heightRes; ox++) {
       const fx = (ox + 0.5) / heightRes * CROP_W - 0.5;
-      maskCpu[oy * heightRes + ox] = sampleNearest(cropM, CROP_W, CROP_H, fx, fy);
+      const i = oy * heightRes + ox;
+      maskCpu[i] = sampleNearest(cropM, CROP_W, CROP_H, fx, fy);
+      speciesCpu[i] = sampleNearest(cropS, CROP_W, CROP_H, fx, fy);
+      // weights: nearest-neighbor (float32 source, but uint8 cast is fine)
+      {
+        const sx = Math.min(Math.max(Math.round(fx), 0), CROP_W - 1);
+        const sy = Math.min(Math.max(Math.round(fy), 0), CROP_H - 1);
+        weightsCpu[i] = cropW[sy * CROP_W + sx] ?? 0;
+      }
     }
   }
 
@@ -422,5 +452,8 @@ export async function loadGavdosData(
     noiseB: noise.texB,
     cpuHeights: heightCpu,
     cpuWaterY,
+    cpuSpecies: speciesCpu,
+    cpuWeights: weightsCpu,
+    vegRes: heightRes,
   };
 }

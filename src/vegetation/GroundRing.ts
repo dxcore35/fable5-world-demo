@@ -305,11 +305,16 @@ export class GroundRing {
   private counters!: ReturnType<StorageBufferNode<'uint'>['toAtomic']>;
   private caps: number[] = [...GRASS_CAPS, ...DEB_CAPS, FAR_CAP];
 
+  /**
+   * @param dryBias  0 = default boreal green palette; 1 = fully golden-dry
+   *                 Mediterranean palette (Gavdos). Blended in grassMaterial.
+   */
   constructor(
     private hf: Heightfield,
     private canopyTex: StorageTexture,
     private seed: WorldSeed,
     private gi: ProbeGI | null = null,
+    private dryBias: number = 0,
   ) {}
 
   /**
@@ -880,11 +885,19 @@ export class GroundRing {
     ) as unknown as typeof mat.normalNode;
 
     const t = uv().y as unknown as NF;
-    const fresh = mix(
+    // Mediterranean dry-bias palette: golden straw replacing the green sward.
+    // dryBias==0 → default boreal green; dryBias==1 → Gavdos summer gold.
+    const freshGreen = mix(
       vec3(0.02, 0.062, 0.011),
       vec3(0.065, 0.148, 0.028),
       t.mul(t),
     ) as unknown as NV3;
+    const freshDry = mix(
+      vec3(0.11, 0.095, 0.028),
+      vec3(0.22, 0.19, 0.062),
+      t.mul(t),
+    ) as unknown as NV3;
+    const fresh = mix(freshGreen, freshDry, float(this.dryBias)) as unknown as NV3;
     const dry = mix(
       vec3(0.085, 0.07, 0.024),
       vec3(0.21, 0.17, 0.075),
@@ -894,9 +907,12 @@ export class GroundRing {
     // straw patches are a full-sun phenomenon) — without this the carpet
     // reads as a pale glowing mat inside forest interiors
     const cov = canopyAt(this.canopyTex, wpos);
-    const dryK = smoothstep(0.7, 0.95, patch.x).mul(
+    // Gavdos: almost everything is dry — floor the dryK so even "fresh" areas
+    // show the golden-straw character; canopy shade suppresses it slightly.
+    const dryKBase = smoothstep(0.7, 0.95, patch.x).mul(
       float(1).sub(cov.mul(0.85)),
     );
+    const dryK = mix(dryKBase, float(1).sub(cov.mul(0.5)).clamp(0.55, 1.0), float(this.dryBias)) as unknown as NF;
     let albedo = mix(fresh, dry, dryK) as unknown as NV3;
     albedo = albedo.mul(patch.y.sub(0.5).mul(0.3).add(1)) as unknown as NV3;
     albedo = mix(albedo, vec3(0.018, 0.052, 0.014), cov.mul(0.55)) as unknown as NV3;

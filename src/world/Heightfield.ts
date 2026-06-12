@@ -81,6 +81,11 @@ export class Heightfield {
   cpuHeights: Float32Array | null = null;
   /** CPU waterY mirror (sim res) — underwater camera guard */
   cpuWaterY: Float32Array | null = null;
+  /**
+   * Gavdos-only: species/weights maps for T4 Mediterranean veg placement.
+   * Null in all procedural-world paths.
+   */
+  gavdosVegData: GavdosDataResult | null = null;
 
   /** r32float height texture (nearest-sample / textureLoad only) */
   readonly heightTex: StorageTexture;
@@ -126,6 +131,7 @@ export class Heightfield {
     hf.noiseB = data.noiseB;
     hf.cpuHeights = data.cpuHeights;
     hf.cpuWaterY = data.cpuWaterY;
+    hf.gavdosVegData = data;
     return hf;
   }
 
