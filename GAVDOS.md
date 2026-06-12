@@ -111,7 +111,45 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
   Brightness peak at waterline confirmed.
 - Data-pipeline IoU: 0.9641 PASS ≥ 0.95
 - Default-world regression: terrain.maxH=1857, caustics running, no errors ✓
-### T4 mediterranean vegetation — status: pending
+### T4 mediterranean vegetation — status: done
+- `src/vegetation/Species.ts`: GAVDOS_JUNIPER (3–6 m umbrella juniper, scale-like needles),
+  CALABRIAN_PINE (8–14 m umbrella crown), OLIVE (3–5 m gnarled silver-green), PHRYGANA
+  (0.3–0.8 m cushion shrub). Arrays GAVDOS_TREE_SPECIES + GAVDOS_UNDERSTORY_SPECIES added;
+  boreal six untouched.
+- `src/gavdos/GavdosData.ts`: loads species.bin + weights.bin; exposes cpuSpecies/cpuWeights/vegRes.
+- `src/world/Heightfield.ts`: gavdosVegData: GavdosDataResult | null (null for all procedural paths).
+- `src/gavdos/GavdosVeg.ts`: new — buildGavdosVegLibrary (3 tree × 4 variants + phrygana shrub +
+  pale limestone rocks/stones); runGavdosScatter (CPU Poisson: TCELL=5 m trees, UCELL=2.8 m
+  understory driven by species.bin × weights.bin; juniper allowed on sand dunes h≥0);
+  placeGavdosRocks (rocks.json exact placement into extras layer); GAVDOS_DRY_BIAS=1.0.
+- `src/vegetation/GroundRing.ts`: dryBias param (0=boreal, 1=golden-straw Mediterranean);
+  freshDry palette blended in grassMaterial; dryK floor for summer-dry appearance.
+- `src/debug/TerrainScene.ts`: gavdos branch routes through buildGavdosVegLibrary +
+  runGavdosScatter + GroundRing(dryBias=1). Default world path unchanged.
+- Commit: a87e801 (6 files changed, +1042/−15)
+
+#### T4 verification
+- typecheck: PASS (exit 0)
+- gavdos scatter counts: trees=9,263 under=390,614 extras=40,000 stones=600,000
+- RANK ORDER: phrygana (390k) >> trees (9k) — phrygana > (pine+juniper+olive) ✓
+  (per-species split not emitted in HUD; total trees 9,263 within 10k–80k gate ✓)
+- Boreal species count = 0 in gavdos (separate library, separate scatter kernel) ✓
+- shots/gavdos/veg-cedars.png: Ag. Ioannis dune approach, fps=55, tris=10.1M ✓
+- shots/gavdos/veg-phrygana-hills.png: interior hillside, fps=56 ✓
+- shots/gavdos/veg-olives.png: olive cluster lon=24.0734/lat=34.8638, fps=54 ✓
+- Regression veg.trees=188,724 ≈ 188k ✓, caustics running ✓, no errors ✓
+- Perf hero shot: fps=55 @ 1080p, tris=10,104,923 ✓ (gate: fps≥24)
+
+#### T4 deviations
+- Per-species HUD counters: Forests does not expose per-cls counts in counterSnapshot();
+  species rank confirmed by scatter algo design (phrygana UCELL=2.8m vs tree TCELL=5m,
+  phrygana prob 0.22–0.45 vs tree 0.12–0.18 × weight) and total counts.
+- Juniper-on-sand placement: h≥0.0 threshold (spec says h<1.5 m beach band exclusion
+  except juniper-on-sand); juniper allowed at all heights where species==1.
+- rocks.json wiring: extras layer receives both random rocky boulders AND rocks.json
+  entries; rocks.json uses exact lonLatToWorld positions with radius-derived scale.
+- DryGrass implemented as GroundRing dryBias=1.0 (palette blend, not a separate species);
+  sparse on sand/rock via the existing biomeTex density gate (biomeTex.z < 0.2 on mask==3/4).
 ### T5 buildings/roads/walls — status: pending
 ### T6 QA battery + bookmarks — status: pending
 
