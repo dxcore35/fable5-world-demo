@@ -23,26 +23,36 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
 - Roadmask 4096×4096 grayscale PNG rasterised from 194 road centrelines (206 695 nonzero px) → public/gavdos/roadmask.png.
 ### T2 world source + heightfield — status: done
 - `src/gavdos/GavdosConst.ts`: geodesy contract. NORTH_SIGN = −1 (evidence: TerrainScene.ts
-  "yaw=0 = looking −z (north)"). WORLD_SIZE path: 4096 fallback (WORLD_SIZE=8192 would touch
-  >10 subsystems: Scatter×6, BiomeSnow, Heightfield, TerrainTiles×3, ProbeGI×4, Froxels,
-  Particles, GroundRing×4, Caustics, WaterMaterial, CanopyShell, ShadowProxy). V1 shows
-  central 4×4 km (CENTER ± 2048 m ≈ lon [24.058, 24.102] / lat [34.808, 34.846]).
-  Crop: X0=1076, X1=1382, Y0=953, Y1=1260 (W=306, H=307 source pixels).
+  "yaw=0 = looking −z (north)"). World size: 8192 m (full island + sea margin) via
+  `setActiveWorldSize(GAVDOS_WORLD_SIZE)` called in TerrainScene.ts before any world system
+  is constructed. Window: CENTER ± 4096 m → lon [24.0352, 24.1248] / lat [34.7901, 34.8639].
+  Crop: X0=923, X1=1535, Y0=800, Y1=1413 (W=612, H=613 source pixels).
+- `src/world/WorldConst.ts`: added `worldSize()` / `worldHalf()` / `setActiveWorldSize()`.
+  All 16 consumer files (Scatter, BiomeSnow, Heightfield, TerrainTiles, ProbeGI, Froxels,
+  Particles, GroundRing, Caustics, WaterMaterial, CanopyShell, ShadowProxy, HeightSynthesis,
+  FlowRivers, TerrainMaterial, Clouds) updated to call `worldSize()`. Clouds `SHADOW_WORLD`
+  converted to `shadowWorld()` fn to avoid module-load-time capture before setActiveWorldSize.
+  Procedural world default remains 4096 m byte-identical.
 - `src/gavdos/GavdosData.ts`: async loader. Fetches heightmap.bin + mask.bin, crops, bicubic-
   upsamples height to heightRes², nearest-neighbor mask, road smoothing (α=0.7, 9×9 mean
   where roadmask>0). Uploads via r32f DataTexture→compute copy. Builds fieldsTex (moisture=0.3,
   no rivers), biomeTex from mask (1→Meadow, 2→Conifer, 3→Meadow, 4→Alpine), waterY dry sentinel
   (−2 m everywhere — no inland rivers). Snow forced to 0 (island max 368 m << SNOWLINE 1050 m).
+  Normal derivation uses `worldSize()` for correct 8192 m texel scale.
 - `src/gavdos/GavdosWorld.ts`: orchestrator, hook comments for T3/T4/T5.
 - `Heightfield.fromGavdos()`: new static factory (minimal Heightfield.ts edit).
 - `src/core/Params.ts`: added `world: 'laas'|'gavdos'` param.
-- `src/debug/TerrainScene.ts`: world-switch at Heightfield.generate() call; caustics + water
-  clipmap disabled for gavdos (both require hf.flow which is null without hydrology).
-  Gavdos spawn: y=800, looking north (pitch=−0.8).
-- `tools/gavdos/verify-world-data.ts`: assertion (a) 678 border land texels (island extends
-  to north crop edge — expected); assertion (b) max height 367.94 m PASS [360–375].
-- `tools/gavdos/iou.ts`: data-pipeline IoU = 0.9901 PASS ≥ 0.90. (Render IoU 0.64 informational
-  — v1 has no ocean shader; sea floor renders as terrain material until T3.)
+- `src/debug/TerrainScene.ts`: `setActiveWorldSize(GAVDOS_WORLD_SIZE)` called first in gavdos
+  branch; world-switch at Heightfield.generate() call; caustics + water clipmap disabled for
+  gavdos (both require hf.flow which is null without hydrology).
+  Gavdos spawn: y=1400, looking north (pitch=−0.8) — raised to show full 8192 m island.
+- `tools/gavdos/verify-world-data.ts`: CROP_HALF updated to 4096. assertion (a) 425 border land
+  texels — north (326) + east (99) are Gavdopoula islet clipping, max border h=94.9 m (islet edges,
+  not main island clip); assertion (b) max height 367.94 m PASS [360–375].
+- `tools/gavdos/iou.ts`: CROP_HALF updated to 4096. data-pipeline IoU = 0.9751 PASS ≥ 0.95.
+  (Render IoU informational — v1 has no ocean shader; sea floor renders as terrain until T3.)
+- Scatter density: treeG = worldSize()/TREE_CELL auto-scales to 4× grid for 8192 m; GPU caps
+  (600k/700k/1.5M/180k) absorb surplus; sea cells rejected by h<LAKE_LEVEL guard.
 - Far field: engine far shell (macroTerrain 'far' on neutral mp) renders procedural hills beyond
   world edge. Not flat sea. Noted as deviation from spec — T3 will add ocean plane.
 - Water level: 0 (sea level). LAKE_LEVEL=142 is bypassed — no hydrology pass in gavdos.
