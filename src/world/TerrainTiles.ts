@@ -10,7 +10,7 @@
  *   blended to the baked field across the world edge.
  */
 
-import { InstancedMesh, PlaneGeometry, RingGeometry, Mesh, type PerspectiveCamera } from 'three';
+import { InstancedMesh, PlaneGeometry, RingGeometry, Mesh, type PerspectiveCamera, type Texture } from 'three';
 import {
   IrradianceNode,
   MeshPhysicalNodeMaterial,
@@ -82,6 +82,11 @@ export class TerrainTiles {
       gi?: ProbeGI;
       /** canopy coverage map — attenuates probe ambient under tree crowns */
       canopyTex?: StorageTexture;
+      /**
+       * Gavdos road-mask texture (4096×4096 grayscale). When present, dirt-track
+       * tan is blended over the terrain where road > 0. Default world = absent.
+       */
+      roadMaskTex?: Texture | null;
     } = {},
   ) {
     this.hf = hf;
@@ -196,6 +201,7 @@ export class TerrainTiles {
       noiseB: hf.noiseB as NonNullable<typeof hf.noiseB>,
       mp: hf.mp,
       far: false,
+      roadMaskTex: opts.roadMaskTex ?? null,
     });
     mat.colorNode = shading.colorNode;
     mat.normalNode = shading.normalNode;

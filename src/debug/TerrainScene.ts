@@ -7,6 +7,7 @@
  * ?alt=N puts the camera N meters above ground (ground-clamped spawn).
  */
 
+import { TextureLoader, type Texture } from 'three';
 import { BOOKMARKS, installBookmarks } from './Bookmarks';
 import { Froxels } from '../gpu/passes/Froxels';
 import { PARTICLE_COUNT, Particles } from '../gpu/passes/Particles';
@@ -33,6 +34,7 @@ import {
   placeGavdosRocks,
   GAVDOS_DRY_BIAS,
 } from '../gavdos/GavdosVeg';
+import { buildGavdosStructures } from '../gavdos/GavdosStructures';
 import { TerrainTiles } from '../world/TerrainTiles';
 import { WaterSurface } from '../world/WaterSurface';
 import { PostStack } from '../render/PostStack';
@@ -156,6 +158,18 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
     }
   }
 
+  // [GAVDOS-STRUCT-HOOK] Load road-mask texture for terrain shading (gavdos only)
+  let gavdosRoadMaskTex: Texture | null = null;
+  if (params.world === 'gavdos') {
+    try {
+      gavdosRoadMaskTex = await new Promise<Texture>((resolve, reject) => {
+        new TextureLoader().load('/gavdos/roadmask.png', resolve, undefined, reject);
+      });
+    } catch {
+      // roadmask texture optional — roads just won't tint terrain
+    }
+  }
+
   ctx.progress(0.958, 'terrain: building tiles');
   const view = new URLSearchParams(window.location.search).get('view');
   if (view === 'scatter') addScatterDebug(engine.scene, scatter);
@@ -174,7 +188,11 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
       post.update(engine.camera);
     });
   } else {
-    tiles = new TerrainTiles(hf, view, { gi, canopyTex });
+    tiles = new TerrainTiles(hf, view, {
+      gi,
+      canopyTex,
+      roadMaskTex: gavdosRoadMaskTex,
+    });
     engine.scene.add(tiles.mesh);
     engine.scene.add(tiles.farShell);
     // ?ablate=proxy — drop the terrain shadow caster (shadow-debug bisect)
@@ -257,6 +275,19 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
     if (!ablate.has('shell')) {
       engine.scene.add(buildCanopyShell(hf, canopyTex));
     }
+  }
+
+  // [GAVDOS-STRUCT-HOOK] T5: buildings/walls from OSM vectors (gavdos only)
+  if (params.world === 'gavdos' && !ablate.has('structures')) {
+    ctx.progress(0.969, 'gavdos: placing buildings and walls');
+    const structs = await buildGavdosStructures(engine.renderer, hf);
+    engine.scene.add(structs.buildingsMesh);
+    engine.scene.add(structs.wallsMesh);
+    console.log(
+      `[gavdos] structures: buildings placed=${structs.buildingCount}` +
+      ` wallSegments=${structs.wallSegmentCount}` +
+      ` roadMaskWired=${structs.roadMaskWired}`,
+    );
   }
 
   // volumetric clouds (noise bake + sun-shadow map)

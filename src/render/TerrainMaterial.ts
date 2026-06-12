@@ -17,6 +17,7 @@
  * instead of four finite-difference evaluations.
  */
 
+import type { Texture } from 'three';
 import type { StorageTexture } from 'three/webgpu';
 import {
   cameraPosition,
@@ -51,6 +52,13 @@ export interface TerrainShadingInputs {
   /** baked tileable noise (NoiseBake channel map) */
   noiseA: StorageTexture;
   noiseB: StorageTexture;
+  /**
+   * Optional Gavdos road-mask texture (4096×4096 grayscale, r=road).
+   * When present (gavdos path only), dirt-track tan is blended over the
+   * terrain albedo where mask > 0.  Absent in the default world → behavior
+   * is byte-identical to the pre-T5 shading.
+   */
+  roadMaskTex?: Texture | null;
   mp: MacroParams;
   /** far shell: cheaper bands + far-detail synthesis */
   far: boolean;
@@ -252,6 +260,22 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   col = mix(col, gravel, riverW.mul(0.85).mul(pondK.oneMinus()));
   col = mix(col, vec3(0.055, 0.052, 0.038), pondK);
   col = mix(col, snowCol, snowW);
+
+  // ---------- Gavdos road-mask blend (optional — gavdos path only) -------------
+  // roadMaskTex is null/absent in the default world → byte-identical behavior.
+  // The JavaScript-level if() controls which TSL graph is built at shader
+  // compile time — no runtime branching, no toVar/assign needed.
+  // Where the 4096×4096 grayscale mask > 0, blend toward dirt-track tan and
+  // raise roughness.  Road UV maps world [-worldHalf, +worldHalf] → [0, 1].
+  let roadBlendK: NF = float(0);
+  if (inp.roadMaskTex) {
+    const roadUV = wxz.div(worldHalf() * 2).add(0.5);
+    const roadVal = texture(inp.roadMaskTex, roadUV).x;
+    const roadTan = vec3(0.62, 0.52, 0.37);
+    roadBlendK = roadVal.mul(0.8) as NF; // max 80 % blend
+    col = mix(col, roadTan, roadBlendK) as NV3;
+  }
+
   col = col.mul(macroTint.add(1));
 
   // feedback 2.8 (splat half): a real grass field is DIRECTIONAL — forward
@@ -367,6 +391,7 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   const rough = mix(float(0.94), float(0.8), rockW)
     .sub(snowW.mul(0.32))
     .sub(wet.mul(0.45))
+    .add(inp.roadMaskTex ? roadBlendK.mul(0.04) : float(0)) // roads slightly rougher
     .clamp(0.25, 1);
 
   return {

@@ -59,7 +59,9 @@ export async function buildGavdosHeightfield(
 
   // [GAVDOS-VEG-HOOK] — pass species.bin / weights.bin to veg scatter (T4)
 
-  // [GAVDOS-STRUCT-HOOK] — load vectors.json for building/road placement (T5)
+  // [GAVDOS-STRUCT-HOOK] — T5 done: buildGavdosStructures() called in TerrainScene.ts
+  // after hf is available (requires hf.heightAtCpu for terrain conforming).
+  // Road mask is loaded as a Texture in TerrainScene and passed to TerrainTiles.
 
   return hf;
 }
