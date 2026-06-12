@@ -26,6 +26,7 @@ import { makeMacroParams } from '../world/MacroMap';
 import { qualityConfig, setActiveWorldSize } from '../world/WorldConst';
 import { buildGavdosHeightfield } from '../gavdos/GavdosWorld';
 import { GAVDOS_WORLD_SIZE } from '../gavdos/GavdosConst';
+import { GavdosOcean } from '../gavdos/GavdosOcean';
 import { TerrainTiles } from '../world/TerrainTiles';
 import { WaterSurface } from '../world/WaterSurface';
 import { PostStack } from '../render/PostStack';
@@ -142,6 +143,7 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   ctx.progress(0.958, 'terrain: building tiles');
   const view = new URLSearchParams(window.location.search).get('view');
   if (view === 'scatter') addScatterDebug(engine.scene, scatter);
+  let tiles: TerrainTiles | null = null;
   if (view === 'split' && hf.preErosion) {
     // erosion before/after: pre-erosion clay on the left, eroded on the right
     const pre = new TerrainTiles(hf, null, {
@@ -156,29 +158,43 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
       post.update(engine.camera);
     });
   } else {
-    const tiles = new TerrainTiles(hf, view, { gi, canopyTex });
+    tiles = new TerrainTiles(hf, view, { gi, canopyTex });
     engine.scene.add(tiles.mesh);
     engine.scene.add(tiles.farShell);
     // ?ablate=proxy — drop the terrain shadow caster (shadow-debug bisect)
     if (!ablate.has('proxy')) engine.scene.add(buildTerrainShadowProxy(hf));
     engine.onUpdate(() => {
-      tiles.update(engine.camera);
-      engine.stats.counters['terrain.tiles'] = tiles.activeTiles;
+      (tiles as TerrainTiles).update(engine.camera);
+      engine.stats.counters['terrain.tiles'] = (tiles as TerrainTiles).activeTiles;
     });
   }
 
   // Phase 6: stream/lake water clipmap (?ablate=water to A/B)
   // Gavdos: WaterMaterial requires hf.flow (hydrology); gavdos has none.
-  // Ocean rendering for gavdos is a T3 task. [GAVDOS-WATER-HOOK]
-  if (view !== 'split' && !ablate.has('water') && params.world !== 'gavdos') {
-    const water = new WaterSurface(
-      hf,
-      sunSky.atmosphere,
-      canopyTex,
-      ablate.has('gi') ? null : gi,
-    );
-    engine.scene.add(water.group);
-    engine.onUpdate(() => water.update(engine.camera));
+  // [GAVDOS-WATER-HOOK] — T3 ocean: GavdosOcean replaces WaterSurface + far shell.
+  if (view !== 'split' && !ablate.has('water')) {
+    if (params.world === 'gavdos') {
+      // Real Mediterranean ocean: no flow field required.
+      // Far shell already added above is the procedural terrain ring — hide it
+      // for gavdos (the far sea disc inside GavdosOcean replaces it).
+      if (tiles) tiles.farShell.visible = false;
+      const ocean = new GavdosOcean(
+        hf,
+        sunSky.atmosphere,
+        ablate.has('gi') ? null : gi,
+      );
+      engine.scene.add(ocean.group);
+      engine.onUpdate(() => ocean.update(engine.camera));
+    } else {
+      const water = new WaterSurface(
+        hf,
+        sunSky.atmosphere,
+        canopyTex,
+        ablate.has('gi') ? null : gi,
+      );
+      engine.scene.add(water.group);
+      engine.onUpdate(() => water.update(engine.camera));
+    }
   }
 
   // Phase 5: variant pools + GPU cull → compacted indirect draws
