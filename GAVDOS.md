@@ -203,7 +203,28 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
   (walls + roof merged). Roof colour variation (flat=plaster, gable=terracotta) is a
   deviation from spec — unified material is plaster only. Separate roof material would
   need a second BatchedMesh (extra draw call); 200 buildings is tiny so this is fine.
-### T6 QA battery + bookmarks — status: pending
+### T6 QA battery + bookmarks — status: done
+- `src/debug/Bookmarks.ts`: added `GAVDOS_BOOKMARKS` (8 viewpoints, gavdos-gated keys 1–8).
+  Procedural set untouched. `?shot=N` boots gavdos bookmarks when `?world=gavdos`.
+- `tools/gavdos/verify-world.ts`: full 7-gate battery (typecheck / data IoU / render IoU /
+  structures / no-black-shadows / perf / veg sanity).
+- `GAVDOS-DELTA.md`: final report with gate table, root-cause analysis, known gaps.
+- All 8 bookmark shots: `shots/gavdos/bookmark-{1..8}.png`.
+- Default-world regression: `shots/regression-default-world-t6.png` (veg.trees=188,724 ✓).
+
+#### T6 gate results (2026-06-12)
+| Gate | Result | Key number |
+|------|--------|-----------|
+| 1 typecheck | PASS | exit 0 |
+| 2 data IoU ≥ 0.95 | PASS | 0.9641 |
+| 3 render IoU ≥ 0.90 | FAIL | 0.4165 — classifier can't distinguish ocean shader at nadir |
+| 4 structures | FAIL | 248m Fokia POI (OSM hamlet misaligned; 6/7 POIs ≤ 31m ✓) |
+| 5 no-black-shadows | FAIL | lum=5.4 at T=18.5 dusk (daytime T=14 PASS, lum=19.6) |
+| 6 perf ≥ 24fps | FAIL | bm3=19.4 bm7=28.1 bm8=21.5 — 10240m world 6.25× calibration scale |
+| 7 veg sanity | PASS | trees=9263 under=390614 |
+
+All FAILs are engine-scope — not patchable within bookmark/verify-world file scope.
+Full root-cause + polish list: `GAVDOS-DELTA.md`.
 
 ## Blockers
 

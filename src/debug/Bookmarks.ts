@@ -16,6 +16,53 @@ import type { LaasHooks } from '../core/Hooks';
 import type { LaasParams } from '../core/Params';
 import type { Heightfield } from '../world/Heightfield';
 
+// ---------------------------------------------------------------------------
+// Gavdos bookmarks (active ONLY when world=gavdos, keys 1–8)
+// Geodesy: lonLatToWorld(), north = −Z (NORTH_SIGN = −1).
+// All coords computed from GavdosConst.lonLatToWorld() at their POI lon/lat.
+// ---------------------------------------------------------------------------
+
+/**
+ * 8 composed Gavdos viewpoints — keys 1–8 when ?world=gavdos.
+ * Positions come from lonLatToWorld() applied to the OSM POI coordinates;
+ * camera offsets are additive (approach direction + altitude above terrain).
+ *
+ * Coordinate reference (world-space):
+ *   Sarakiniko hamlet   lon=24.1109 lat=34.8581  → x≈2405, z≈-2153
+ *   Ag. Ioannis beach   lon=24.0847 lat=34.8676  → x≈7,    z≈-3214
+ *   Kastri village      lon=24.0848 lat=34.8350  → x≈16,   z≈412
+ *   Karave port         lon=24.1183 lat=34.8487  → x≈3079, z≈-1110
+ *   Lighthouse (W)      lon=24.0587 lat=34.8390  → x≈-2368,z≈-30
+ *   Tripiti south       lon=24.1236 lat=34.8045  → x≈3563, z≈3804
+ *   Summit              lon=24.0846 lat=34.8600  → x≈0,    z≈-2367
+ *   Offshore SW 2500 m  →                           x≈-1767,z≈1768
+ */
+export const GAVDOS_BOOKMARKS: Bookmark[] = [
+  // 1 — Sarakiniko bay: low over the water, looking NW at beach + hamlet
+  { name: 'Sarakiniko bay', x: 2300, z: -2000, alt: 8, yaw: -0.8, pitch: -0.08, tod: 12 },
+
+  // 2 — Ag. Ioannis dunes: low in the dune field, looking S at junipers
+  { name: 'Ag. Ioannis dunes', x: 7, z: -3050, alt: 3, yaw: 3.14, pitch: -0.05, tod: 11 },
+
+  // 3 — Kastri village: ~100 m above, ~300 m south, looking N-ish down at white houses
+  { name: 'Kastri village', x: 16, z: 712, alt: 100, yaw: 0.0, pitch: -0.35, tod: 13 },
+
+  // 4 — Karave port: harbour buildings + sea, looking W from just offshore
+  { name: 'Karave port', x: 3350, z: -1110, alt: 30, yaw: -2.8, pitch: -0.1, tod: 10 },
+
+  // 5 — Lighthouse west: cliff + tower area (west coast, y derived from terrain)
+  { name: 'Lighthouse west', x: -2368, z: -30, alt: 40, yaw: 1.57, pitch: -0.15, tod: 14 },
+
+  // 6 — Tripiti south cliffs: southernmost land, dramatic cliffs + open sea S
+  { name: 'Tripiti south cliffs', x: 3450, z: 3900, alt: 50, yaw: 3.14, pitch: -0.18, tod: 15.5 },
+
+  // 7 — Summit vista: highest point ~368 m, wide view north over island to sea
+  { name: 'Summit vista', x: 0, z: -2367, alt: 80, yaw: 0.0, pitch: -0.3, tod: 14 },
+
+  // 8 — Whole-island offshore: ~2500 m SW, y≈900, looking NE over full island
+  { name: 'Whole-island offshore', x: -1767, z: 1768, alt: 900, yaw: -2.36, pitch: -0.35, tod: 13 },
+];
+
 export interface Bookmark {
   name: string;
   x: number;
@@ -61,7 +108,19 @@ export function installBookmarks(
 
   window.addEventListener('keydown', (e) => {
     const m = /^Digit([1-9])$/.exec(e.code);
-    if (m) apply(Number(m[1]) - 1);
+    if (m) {
+      if (params.world === 'gavdos') {
+        // Gavdos bookmarks on keys 1–8; key 9 falls through to procedural set
+        const gi = Number(m[1]) - 1;
+        const gb = GAVDOS_BOOKMARKS[gi];
+        if (gb) {
+          hooks.setPose?.({ p: [gb.x, poseY(hf, gb), gb.z], yaw: gb.yaw, pitch: gb.pitch });
+          hooks.setTimeOfDay?.(gb.tod);
+          return;
+        }
+      }
+      apply(Number(m[1]) - 1);
+    }
     if (e.code === 'KeyF') fly.toggle();
   });
 
@@ -129,9 +188,17 @@ export function installBookmarks(
   // boot directly into a bookmark (?shot=N) — pose via initialPose (the
   // fly rig applies it after this scene finishes building)
   if (params.shot !== null && params.cam === null) {
-    const b = BOOKMARKS[params.shot - 1];
-    if (b) {
-      hooks.initialPose = { p: [b.x, poseY(hf, b), b.z], yaw: b.yaw, pitch: b.pitch };
+    if (params.world === 'gavdos') {
+      const gb = GAVDOS_BOOKMARKS[params.shot - 1];
+      if (gb) {
+        hooks.initialPose = { p: [gb.x, poseY(hf, gb), gb.z], yaw: gb.yaw, pitch: gb.pitch };
+        hooks.setTimeOfDay?.(gb.tod);
+      }
+    } else {
+      const b = BOOKMARKS[params.shot - 1];
+      if (b) {
+        hooks.initialPose = { p: [b.x, poseY(hf, b), b.z], yaw: b.yaw, pitch: b.pitch };
+      }
     }
   }
 }
