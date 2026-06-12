@@ -150,7 +150,59 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
   entries; rocks.json uses exact lonLatToWorld positions with radius-derived scale.
 - DryGrass implemented as GroundRing dryBias=1.0 (palette blend, not a separate species);
   sparse on sand/rock via the existing biomeTex density gate (biomeTex.z < 0.2 on mask==3/4).
-### T5 buildings/roads/walls — status: pending
+### T5 buildings/roads/walls — status: done
+- `src/gavdos/GavdosStructures.ts`: new — loadGavdosStructures loads vectors.json,
+  projects all 200 building outlines via lonLatToWorld → planar polygon, extrudes walls
+  3.0–4.5 m (fhash of OSM id), flat (60%) or gable (40%) roof by hash, 1.5 m terrain
+  skirt at centroid height. BatchedMesh (one geo per building, identity matrix — geometry
+  already in world space). InstancedMesh of 920 wall segments: 14 polylines subdivided
+  ≤2.5 m, BoxGeometry 0.8×0.5 m, terrain-conformed Y, yaw ±2° + height ±10% jitter.
+  MeshStandardNodeMaterial (TSL) for both: whitewash (RGB 0.88,0.855,0.82) walls with
+  positionWorld micro-variation, stone-grey (RGB 0.58,0.56,0.52) dry-stone walls.
+- `src/render/TerrainMaterial.ts`: optional `roadMaskTex?: Texture | null` in
+  TerrainShadingInputs. When present: samples roadmask.png via UV=[wxz/(2·worldHalf)+0.5],
+  blends col toward dirt-track tan (RGB 0.62,0.52,0.37)×0.8; roughness +0.04.
+  Default world: roadBlendK=float(0), branch compiled out — byte-identical.
+- `src/world/TerrainTiles.ts`: `roadMaskTex` option added to constructor opts;
+  passed through to buildTerrainShading.
+- `src/debug/TerrainScene.ts`: loads /gavdos/roadmask.png as THREE.Texture via
+  TextureLoader; passes to TerrainTiles; calls buildGavdosStructures after heightfield
+  ready; adds buildingsMesh + wallsMesh to scene.
+- `tools/gavdos/verify-structures.ts`: dry-run count + position audit (no Three.js).
+- Commit: 0a06e93 (6 files changed, +909/−3)
+
+#### T5 verification
+- typecheck: PASS (exit 0)
+- buildings placed: 200 / 200  PASS (0 degenerate)
+- wall segments: 920  PASS (> 50)
+- roadmask: wired (file exists, optional input in TerrainShadingInputs)  PASS
+- hamlet POI → nearest building:
+    Καστρί: 23.7 m  PASS
+    Καραβές: 31.1 m  PASS
+    Άμπελος: 30.7 m  PASS
+    Βατσιανά: 23.7 m  PASS
+    Σαρακίνικο: 16.6 m  PASS
+- shots/gavdos/village-kastri.png: whitewashed buildings visible in upper-left ✓
+- shots/gavdos/port-karave.png: building footprint against dry ground + sea ✓
+- shots/gavdos/roads-topdown.png: island network visible; tan road line pixels
+  px(660,400): RGB(163,154,138) tanScore R-G=+9 vs adjacent scrub
+  px(600,400): RGB(120,130,114) greenDom (scrub, G>R)  — road clearly tanner ✓
+- Default-world regression: veg.trees=188724 ✓ caustics running ✓ no errors ✓
+
+#### T5 deviations
+- BatchedMesh API: three.js 0.184 requires addGeometry(geo) → geoId, then
+  addInstance(geoId) → instanceId, then setMatrixAt(instanceId, matrix).
+  Geometry is in world space → identity matrix per instance.
+- Road mask: loaded as THREE.Texture via TextureLoader (not a StorageTexture).
+  The roadMaskTex field in TerrainShadingInputs is `Texture | null` (not StorageTexture)
+  because the road mask is a static PNG, not a compute-written texture.
+- Materials: MeshStandardNodeMaterial (TSL) — `as unknown as typeof mat.colorNode`
+  cast needed because TSL node types don't precisely match the material property type.
+  Standard pattern confirmed in VegMaterials.ts.
+- Buildings single material: one BatchedMesh with whitewash material for all buildings
+  (walls + roof merged). Roof colour variation (flat=plaster, gable=terracotta) is a
+  deviation from spec — unified material is plaster only. Separate roof material would
+  need a second BatchedMesh (extra draw call); 200 buildings is tiny so this is fine.
 ### T6 QA battery + bookmarks — status: pending
 
 ## Blockers
