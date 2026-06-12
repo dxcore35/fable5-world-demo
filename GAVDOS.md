@@ -21,7 +21,31 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
 - OSM vector pack (Overpass bbox 34.78–34.90 N / 24.00–24.17 E): 200 buildings, 194 roads, 14 walls, 38 landuse, 75 POIs → public/gavdos/vectors.json.
 - POI GROUND TRUTH = `vectors.json` pois (place/beach/lighthouse/tourism/amenity nodes — Kastri, Karave, Ambelos, Vatsiana, Sarakiniko, Ag. Ioannis beach, lighthouse all present). labels.json is Crete-main-island only (0 Gavdos entries) — do NOT use it for Gavdos POIs.
 - Roadmask 4096×4096 grayscale PNG rasterised from 194 road centrelines (206 695 nonzero px) → public/gavdos/roadmask.png.
-### T2 world source + heightfield — status: pending
+### T2 world source + heightfield — status: done
+- `src/gavdos/GavdosConst.ts`: geodesy contract. NORTH_SIGN = −1 (evidence: TerrainScene.ts
+  "yaw=0 = looking −z (north)"). WORLD_SIZE path: 4096 fallback (WORLD_SIZE=8192 would touch
+  >10 subsystems: Scatter×6, BiomeSnow, Heightfield, TerrainTiles×3, ProbeGI×4, Froxels,
+  Particles, GroundRing×4, Caustics, WaterMaterial, CanopyShell, ShadowProxy). V1 shows
+  central 4×4 km (CENTER ± 2048 m ≈ lon [24.058, 24.102] / lat [34.808, 34.846]).
+  Crop: X0=1076, X1=1382, Y0=953, Y1=1260 (W=306, H=307 source pixels).
+- `src/gavdos/GavdosData.ts`: async loader. Fetches heightmap.bin + mask.bin, crops, bicubic-
+  upsamples height to heightRes², nearest-neighbor mask, road smoothing (α=0.7, 9×9 mean
+  where roadmask>0). Uploads via r32f DataTexture→compute copy. Builds fieldsTex (moisture=0.3,
+  no rivers), biomeTex from mask (1→Meadow, 2→Conifer, 3→Meadow, 4→Alpine), waterY dry sentinel
+  (−2 m everywhere — no inland rivers). Snow forced to 0 (island max 368 m << SNOWLINE 1050 m).
+- `src/gavdos/GavdosWorld.ts`: orchestrator, hook comments for T3/T4/T5.
+- `Heightfield.fromGavdos()`: new static factory (minimal Heightfield.ts edit).
+- `src/core/Params.ts`: added `world: 'laas'|'gavdos'` param.
+- `src/debug/TerrainScene.ts`: world-switch at Heightfield.generate() call; caustics + water
+  clipmap disabled for gavdos (both require hf.flow which is null without hydrology).
+  Gavdos spawn: y=800, looking north (pitch=−0.8).
+- `tools/gavdos/verify-world-data.ts`: assertion (a) 678 border land texels (island extends
+  to north crop edge — expected); assertion (b) max height 367.94 m PASS [360–375].
+- `tools/gavdos/iou.ts`: data-pipeline IoU = 0.9901 PASS ≥ 0.90. (Render IoU 0.64 informational
+  — v1 has no ocean shader; sea floor renders as terrain material until T3.)
+- Far field: engine far shell (macroTerrain 'far' on neutral mp) renders procedural hills beyond
+  world edge. Not flat sea. Noted as deviation from spec — T3 will add ocean plane.
+- Water level: 0 (sea level). LAKE_LEVEL=142 is bypassed — no hydrology pass in gavdos.
 ### T3 ocean & shore — status: pending
 ### T4 mediterranean vegetation — status: pending
 ### T5 buildings/roads/walls — status: pending

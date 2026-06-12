@@ -31,6 +31,7 @@ import {
 import type { LaasParams } from '../core/Params';
 import type { WorldSeed } from '../core/Seed';
 import { bilerpFloatBuffer, uvToGrid } from '../gpu/BufferSample';
+import type { GavdosDataResult } from '../gavdos/GavdosData';
 import { bakeNoiseTextures } from '../gpu/passes/NoiseBake';
 import type { NF, NI, NV2, NV3 } from '../gpu/TSLTypes';
 import { runBiomeSnow } from '../gpu/passes/BiomeSnow';
@@ -103,6 +104,29 @@ export class Heightfield {
     this.hardness = synth.hardness;
     this.heightTex = heightTex;
     this.normalTex = normalTex;
+  }
+
+  /**
+   * Construct a Heightfield from pre-loaded Gavdos real-DEM data.
+   * Bypasses all procedural synthesis/erosion/hydrology passes.
+   * The mp field uses a neutral makeMacroParams output — only the far shell
+   * analytic height expression uses it, and for gavdos the far shell renders
+   * flat sea (the island is within the crop window; beyond WORLD_HALF is ocean).
+   */
+  static fromGavdos(data: GavdosDataResult, cfg: QualityConfig, mp: MacroParams): Heightfield {
+    const synth = { height: data.height, hardness: data.hardness, res: cfg.heightRes };
+    const hf = new Heightfield(cfg, mp, synth, data.heightTex, data.normalTex);
+    hf.simRes = data.simRes;
+    hf.waterY = data.waterY;
+    hf.waterYFar = data.waterYFar;
+    hf.waterFarRes = data.waterFarRes;
+    hf.fieldsTex = data.fieldsTex;
+    hf.biomeTex = data.biomeTex;
+    hf.noiseA = data.noiseA;
+    hf.noiseB = data.noiseB;
+    hf.cpuHeights = data.cpuHeights;
+    hf.cpuWaterY = data.cpuWaterY;
+    return hf;
   }
 
   static async generate(

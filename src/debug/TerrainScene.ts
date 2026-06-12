@@ -22,6 +22,9 @@ import { sunU, updateSunUniforms } from '../render/VegMaterials';
 import { buildCanopyShell } from '../world/CanopyShell';
 import { Heightfield } from '../world/Heightfield';
 import { buildTerrainShadowProxy } from '../world/ShadowProxy';
+import { makeMacroParams } from '../world/MacroMap';
+import { qualityConfig } from '../world/WorldConst';
+import { buildGavdosHeightfield } from '../gavdos/GavdosWorld';
 import { TerrainTiles } from '../world/TerrainTiles';
 import { WaterSurface } from '../world/WaterSurface';
 import { PostStack } from '../render/PostStack';
@@ -33,12 +36,31 @@ import type { WorldContext } from './Scenes';
 export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   const { engine, params, seed } = ctx;
 
-  const hf = await Heightfield.generate(
-    engine.renderer,
-    params,
-    seed,
-    (p, m) => ctx.progress(p * 0.92, m),
-  );
+  let hf: Heightfield;
+  if (params.world === 'gavdos') {
+    // Real-data world: skip procedural synthesis/erosion/hydrology
+    const cfg = qualityConfig(params.preset);
+    const mp = makeMacroParams(seed); // neutral mp (only far-shell analytic uses it)
+    hf = await buildGavdosHeightfield(
+      engine.renderer,
+      cfg,
+      mp,
+      (p, m) => ctx.progress(p * 0.92, m),
+    );
+    // Gavdos spawn: 800 m above origin, looking north (−Z) over the island
+    if (params.cam === null) {
+      ctx.hooks.initialPose = { p: [0, 800, 0], yaw: 0, pitch: -0.8 };
+      ctx.hooks.initialPoseMode = 'fly';
+      engine.camera.position.set(0, 800, 0);
+    }
+  } else {
+    hf = await Heightfield.generate(
+      engine.renderer,
+      params,
+      seed,
+      (p, m) => ctx.progress(p * 0.92, m),
+    );
+  }
   (engine as unknown as { heightfield?: Heightfield }).heightfield = hf;
 
   if (hf.cpuHeights) {
@@ -92,7 +114,8 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // Phase 6 caustics: per-frame analytic bake + module context — MUST be
   // set before any material factory runs (terrain tiles, rocks, debris all
   // self-apply at build time). ?ablate=caustics to A/B, ?caustk=N to tune.
-  if (!ablate.has('caustics')) {
+  // Gavdos: no hydrology flow field (hf.flow === null) → caustics disabled.
+  if (!ablate.has('caustics') && params.world !== 'gavdos') {
     const bake = new CausticsBake();
     const ck = Number(new URLSearchParams(window.location.search).get('caustk') ?? NaN);
     if (Number.isFinite(ck)) bake.focusK.value = ck;
@@ -142,7 +165,9 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   }
 
   // Phase 6: stream/lake water clipmap (?ablate=water to A/B)
-  if (view !== 'split' && !ablate.has('water')) {
+  // Gavdos: WaterMaterial requires hf.flow (hydrology); gavdos has none.
+  // Ocean rendering for gavdos is a T3 task. [GAVDOS-WATER-HOOK]
+  if (view !== 'split' && !ablate.has('water') && params.world !== 'gavdos') {
     const water = new WaterSurface(
       hf,
       sunSky.atmosphere,
@@ -264,9 +289,10 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // camera spawn: ground-clamped (?alt/x/z → fly) or the DEFAULT WALK SPAWN
   // at the map center — first dry, reasonably flat spot on a spiral out
   // from (0,0), eye at head height, facing the NE massif
+  // Gavdos spawn is set inside the world-branch above; skip this block for it.
   const q = new URLSearchParams(window.location.search);
   const alt = Number(q.get('alt') ?? NaN);
-  if (params.cam === null) {
+  if (params.cam === null && params.world !== 'gavdos') {
     if (Number.isFinite(alt)) {
       const x = Number(q.get('x') ?? 600);
       const z = Number(q.get('z') ?? 900);

@@ -4,12 +4,13 @@
  * in .cache/webgpu-flags.json so subsequent runs start instantly.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser } from 'playwright';
 
 interface LaunchRecipe {
   headless: boolean;
   channel?: string;
+  executablePath?: string;
   args: string[];
 }
 
@@ -20,9 +21,17 @@ interface LaunchRecipe {
  *  - Playwright's default headless uses the GPU-less "headless shell": adapter = null.
  *    Full Chromium new-headless via channel:'chromium' yields an apple/metal-3 adapter.
  */
+// System Chrome path (macOS) — fallback when Playwright chromium channel not installed
+const SYSTEM_CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
 const CANDIDATES: LaunchRecipe[] = [
   { headless: true, channel: 'chromium', args: [] },
   { headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu'] },
+  // System Chrome (macOS) — used when no Playwright chromium is installed
+  ...(existsSync(SYSTEM_CHROME) ? [
+    { headless: true, executablePath: SYSTEM_CHROME, args: ['--headless=new'] },
+    { headless: true, executablePath: SYSTEM_CHROME, args: ['--headless=new', '--enable-unsafe-webgpu'] },
+  ] : []),
   { headless: false, args: [] },
 ];
 
@@ -37,6 +46,7 @@ async function probeRecipe(recipe: LaunchRecipe): Promise<Browser | null> {
       args: recipe.args,
     };
     if (recipe.channel) launchOpts.channel = recipe.channel;
+    if (recipe.executablePath) launchOpts.executablePath = recipe.executablePath;
     browser = await chromium.launch(launchOpts);
     const page = await browser.newPage();
     // any path on the dev server works — we only need the secure localhost origin

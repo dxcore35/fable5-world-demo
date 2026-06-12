@@ -63,6 +63,8 @@ async function boot(): Promise<void> {
   registerScene('shadowtest', buildShadowTestScene);
   // 'world' becomes the streamed open world once terrain tiles land.
   registerScene('world', buildTerrainScene);
+  // 'gavdos' = same render scene but with real DEM data behind ?world=gavdos
+  registerScene('gavdos', buildTerrainScene);
 
   const ctx: WorldContext = {
     engine,
