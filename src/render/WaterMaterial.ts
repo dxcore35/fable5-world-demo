@@ -68,7 +68,7 @@ import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { NF, NI, NV2, NV3, NV4 } from '../gpu/TSLTypes';
 import type { Atmosphere } from '../sky/Atmosphere';
 import type { Heightfield } from '../world/Heightfield';
-import { WORLD_HALF } from '../world/WorldConst';
+import { worldHalf } from '../world/WorldConst';
 
 /** clear alpine water: absorption per meter (r dies first → teal depths) */
 const SIGMA = { r: 0.42, g: 0.135, b: 0.095 };
@@ -110,7 +110,7 @@ export function waterMaterial(
   mat.positionNode = vec3(wxz.x, sampleY(wxz), wxz.y);
 
   // ---- inner-level cutout + hard world bounds ----------------------------------
-  // Outside ±WORLD_HALF the field samples clamp to the border texel — a wet
+  // Outside ±worldHalf() the field samples clamp to the border texel — a wet
   // border cell would extend an infinite water band into the far shell.
   const p = positionWorld.xz;
   const r = lvl.innerRect;
@@ -119,7 +119,7 @@ export function waterMaterial(
     .and(p.y.greaterThan(r.y))
     .and(p.x.lessThan(r.z))
     .and(p.y.lessThan(r.w));
-  const inWorld = p.x.abs().lessThan(WORLD_HALF - 4).and(p.y.abs().lessThan(WORLD_HALF - 4));
+  const inWorld = p.x.abs().lessThan(worldHalf() - 4).and(p.y.abs().lessThan(worldHalf() - 4));
   mat.maskNode = insideInner.not().and(inWorld);
 
   // ---- flow field --------------------------------------------------------------

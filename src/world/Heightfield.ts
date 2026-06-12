@@ -4,7 +4,7 @@
  * buffers/textures + TSL sampling helpers to the rest of the engine.
  *
  * Layout: row-major res×res grids; texel (x,y) ↔ world
- * ((x+0.5)/res − 0.5)·WORLD_SIZE on both axes (x→world x, y→world z).
+ * ((x+0.5)/res − 0.5)·worldSize() on both axes (x→world x, y→world z).
  */
 
 import { FloatType, HalfFloatType, NearestFilter, RedFormat } from 'three';
@@ -43,7 +43,7 @@ import {
   type SynthesisResult,
 } from '../gpu/passes/HeightSynthesis';
 import { makeMacroParams, type MacroParams } from './MacroMap';
-import { WORLD_SIZE, qualityConfig, type QualityConfig } from './WorldConst';
+import { worldSize, qualityConfig, type QualityConfig } from './WorldConst';
 
 export type ProgressFn = (p: number, msg: string) => void;
 
@@ -165,7 +165,7 @@ export class Heightfield {
     progress(0.1, `terrain: eroding (${cfg.erosionIters} iterations)`);
     const erosion = await runErosion(renderer, synthSim.height, synthSim.hardness, {
       res: cfg.simRes,
-      texel: WORLD_SIZE / cfg.simRes,
+      texel: worldSize() / cfg.simRes,
       iters: cfg.erosionIters,
       onProgress: (d, t) => progress(0.1 + 0.45 * (d / t), `terrain: eroding ${d}/${t}`),
     });
@@ -176,7 +176,7 @@ export class Heightfield {
     // hydrology BEFORE compose: river carve must reach the full-res field
     hf.flow = await runFlowRivers(renderer, erosion.eroded, erosion.water, {
       res: cfg.simRes,
-      texel: WORLD_SIZE / cfg.simRes,
+      texel: worldSize() / cfg.simRes,
       seed: seed.sub('hydrology'),
       mp,
       hardness: synthSim.hardness,
@@ -223,8 +223,8 @@ export class Heightfield {
     const hts = this.cpuHeights;
     if (!hts) return 0;
     const res = this.res;
-    const gx = Math.min(Math.max(((x / WORLD_SIZE) + 0.5) * res - 0.5, 0), res - 1.001);
-    const gz = Math.min(Math.max(((z / WORLD_SIZE) + 0.5) * res - 0.5, 0), res - 1.001);
+    const gx = Math.min(Math.max(((x / worldSize()) + 0.5) * res - 0.5, 0), res - 1.001);
+    const gz = Math.min(Math.max(((z / worldSize()) + 0.5) * res - 0.5, 0), res - 1.001);
     const x0 = Math.floor(gx);
     const z0 = Math.floor(gz);
     const fx = gx - x0;
@@ -241,8 +241,8 @@ export class Heightfield {
     const wy = this.cpuWaterY;
     if (!wy) return -1e4;
     const res = this.simRes;
-    const gx = Math.min(Math.max(((x / WORLD_SIZE) + 0.5) * res - 0.5, 0), res - 1.001);
-    const gz = Math.min(Math.max(((z / WORLD_SIZE) + 0.5) * res - 0.5, 0), res - 1.001);
+    const gx = Math.min(Math.max(((x / worldSize()) + 0.5) * res - 0.5, 0), res - 1.001);
+    const gz = Math.min(Math.max(((z / worldSize()) + 0.5) * res - 0.5, 0), res - 1.001);
     const x0 = Math.floor(gx);
     const z0 = Math.floor(gz);
     const fx = gx - x0;
@@ -340,7 +340,7 @@ export class Heightfield {
     // (user-class artifact found at the twin lake). Water never ramps:
     // where the gradient BETWEEN WET CELLS exceeds ~0.35, sink the cell to
     // dry. Shorelines are untouched (their neighbor is dry, not wet).
-    const texel = WORLD_SIZE / res;
+    const texel = worldSize() / res;
     const cliffK = Fn(() => {
       const i = instanceIndex;
       If(i.greaterThanEqual(res * res), () => {
@@ -512,7 +512,7 @@ export class Heightfield {
   async rebuildDerivedMaps(renderer: Renderer): Promise<void> {
     const res = this.res;
     const height = this.height;
-    const texel = WORLD_SIZE / res;
+    const texel = worldSize() / res;
     const kernel = Fn(() => {
       const i = instanceIndex;
       If(i.greaterThanEqual(res * res), () => {
@@ -544,7 +544,7 @@ export class Heightfield {
 
   /** world xz (m) → uv in [0,1]² over the height grid */
   uvFromWorld(p: NV2): NV2 {
-    return p.div(WORLD_SIZE).add(0.5);
+    return p.div(worldSize()).add(0.5);
   }
 
   /**

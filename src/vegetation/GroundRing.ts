@@ -75,7 +75,7 @@ import { gustAt, windContext, windExposure, windU } from '../render/Wind';
 import type { NB, NF, NI, NU, NV2, NV3, NV4 } from '../gpu/TSLTypes';
 import type { Heightfield } from '../world/Heightfield';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
-import { WORLD_SIZE } from '../world/WorldConst';
+import { worldSize } from '../world/WorldConst';
 import {
   barkChipGeometry,
   debrisMaterial,
@@ -429,7 +429,7 @@ export class GroundRing {
       If(dist.greaterThan(GRASS_R), () => {
         Return();
       });
-      const uvW = wpos.div(WORLD_SIZE).add(0.5);
+      const uvW = wpos.div(worldSize()).add(0.5);
       const bio = texture(
         hf.biomeTex as NonNullable<typeof hf.biomeTex>,
         uvW,
@@ -522,7 +522,7 @@ export class GroundRing {
       If(dist.greaterThan(DEB_R), () => {
         Return();
       });
-      const uvW = wpos.div(WORLD_SIZE).add(0.5);
+      const uvW = wpos.div(worldSize()).add(0.5);
       const bio = texture(
         hf.biomeTex as NonNullable<typeof hf.biomeTex>,
         uvW,
@@ -614,7 +614,7 @@ export class GroundRing {
       If(dist.lessThan(FAR_R0 - 16).or(dist.greaterThan(FAR_R)), () => {
         Return();
       });
-      const uvW = wpos.div(WORLD_SIZE).add(0.5);
+      const uvW = wpos.div(worldSize()).add(0.5);
       const bio = texture(
         hf.biomeTex as NonNullable<typeof hf.biomeTex>,
         uvW,
@@ -859,7 +859,7 @@ export class GroundRing {
     const tNrm = (
       texture(
         this.hf.normalTex,
-        wpos.div(WORLD_SIZE).add(0.5),
+        wpos.div(worldSize()).add(0.5),
         0,
       ) as unknown as NV4
     ).xyz.normalize();

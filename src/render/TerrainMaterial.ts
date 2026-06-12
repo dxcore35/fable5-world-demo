@@ -39,7 +39,7 @@ import {
 } from '../gpu/passes/NoiseBake';
 import { sunU } from './VegMaterials';
 import { zoneMasks, type MacroParams } from '../world/MacroMap';
-import { LAKE_LEVEL, WORLD_HALF, WORLD_SIZE } from '../world/WorldConst';
+import { LAKE_LEVEL, worldHalf, worldSize } from '../world/WorldConst';
 
 export interface TerrainShadingInputs {
   /** rgba16f: xyz world normal, w slope */
@@ -70,7 +70,7 @@ export interface TerrainShading {
   worldNormalNode: NV3;
 }
 
-const uvFromWorld = (p: NV2): NV2 => p.div(WORLD_SIZE).add(0.5);
+const uvFromWorld = (p: NV2): NV2 => p.div(worldSize()).add(0.5);
 
 /**
  * Micro-displacement constants — SHARED by the TerrainTiles vertex stage
@@ -131,8 +131,8 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   // procedural estimates outside the domain (far shell only).
   const outsideK = inp.far
     ? smoothstep(
-        WORLD_HALF * 0.96,
-        WORLD_HALF * 1.0,
+        worldHalf() * 0.96,
+        worldHalf() * 1.0,
         wxz.abs().x.max(wxz.abs().y),
       )
     : float(0);

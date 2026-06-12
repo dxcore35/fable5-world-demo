@@ -8,6 +8,13 @@
 export const WORLD_SIZE = 4096;
 export const WORLD_HALF = WORLD_SIZE / 2;
 
+/** Runtime-overridable world size. Set ONCE at boot via setActiveWorldSize()
+ *  BEFORE any world system is constructed. Default = WORLD_SIZE (4096). */
+let _activeWorldSize = WORLD_SIZE;
+export function setActiveWorldSize(s: number): void { _activeWorldSize = s; }
+export function worldSize(): number { return _activeWorldSize; }
+export function worldHalf(): number { return _activeWorldSize / 2; }
+
 /** final composed heightfield resolution (1 m/texel) */
 export const HEIGHT_RES = 4096;
 /** erosion / hydrology simulation grid (2 m/texel) — spec floor ≥2048 */

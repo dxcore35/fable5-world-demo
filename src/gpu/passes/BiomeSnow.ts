@@ -29,7 +29,7 @@ import {
   vec4,
 } from 'three/tsl';
 import { zoneMasks, type MacroParams } from '../../world/MacroMap';
-import { Biome, LAKE_LEVEL, TREELINE, WORLD_SIZE } from '../../world/WorldConst';
+import { Biome, LAKE_LEVEL, TREELINE, worldSize } from '../../world/WorldConst';
 import type { FloatBuffer } from './HeightSynthesis';
 
 export interface BiomeSnowOpts {
@@ -60,7 +60,7 @@ export async function runBiomeSnow(
     const x = i.mod(res);
     const y = i.div(res);
     const uv = vec2(float(x).add(0.5), float(y).add(0.5)).div(res);
-    const wpos = uv.sub(0.5).mul(WORLD_SIZE);
+    const wpos = uv.sub(0.5).mul(worldSize());
     const h = height.element(i).toVar();
     const ns = texture(opts.normalTex, uv);
     const n = ns.xyz;
@@ -82,7 +82,7 @@ export async function runBiomeSnow(
       .add(tNoise.mul(1.2));
 
     // local curvature from height buffer (ledge detection for snow/scree)
-    const texel = WORLD_SIZE / res;
+    const texel = worldSize() / res;
     const stepT = 3;
     const idx = (xx: typeof x, yy: typeof y) =>
       clamp(float(yy), 0, res - 1)

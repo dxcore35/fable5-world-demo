@@ -53,7 +53,7 @@ import type { Atmosphere } from '../../sky/Atmosphere';
 import type { Heightfield } from '../../world/Heightfield';
 import { sunU } from '../../render/VegMaterials';
 import { windU } from '../../render/Wind';
-import { WORLD_SIZE } from '../../world/WorldConst';
+import { worldSize } from '../../world/WorldConst';
 import { PERIOD_FBM } from './NoiseBake';
 import { canopyAt } from './Scatter';
 import { hash13 } from '../noise/NoiseTSL';
@@ -132,7 +132,7 @@ export class Froxels {
       const billow = (texture(noiseA, p.xz.add(drift).div(38 * PERIOD_FBM), 0) as unknown as NV4)
         .y.mul(0.85)
         .add(0.45);
-      const uvW = clamp(p.xz.div(WORLD_SIZE).add(0.5), 0, 1);
+      const uvW = clamp(p.xz.div(worldSize()).add(0.5), 0, 1);
       const moisture = (texture(fieldsTex, uvW, 0) as unknown as NV4).x;
       // dawn/dusk fog is the look; noon goes NEAR-ZERO (user: global fog
       // washed out an already-soft scene — aerial perspective owns daytime

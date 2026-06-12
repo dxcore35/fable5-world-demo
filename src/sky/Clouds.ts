@@ -38,7 +38,7 @@ import {
 } from 'three/tsl';
 import type { NF, NI, NV2, NV3 } from '../gpu/TSLTypes';
 import { windU } from '../render/Wind';
-import { WORLD_SIZE } from '../world/WorldConst';
+import { worldSize } from '../world/WorldConst';
 import type { Atmosphere } from './Atmosphere';
 import { SUN_E } from './Atmosphere';
 
@@ -51,7 +51,7 @@ const WEATHER_WORLD = 26000;
 /** cloud layer altitudes (m) — below the ~2000 m summits */
 export const CLOUD_BOTTOM = 1250;
 export const CLOUD_TOP = 1900;
-const SHADOW_WORLD = WORLD_SIZE * 1.6;
+const shadowWorld = () => worldSize() * 1.6;
 
 export class Clouds {
   readonly baseNoise: Storage3DTexture;
@@ -176,7 +176,7 @@ export class Clouds {
       const wpos = vec2(float(x).add(0.5), float(y).add(0.5))
         .div(S)
         .sub(0.5)
-        .mul(SHADOW_WORLD);
+        .mul(shadowWorld());
       // march vertically through the layer, accumulate optical depth; the
       // sun-angle offset is approximated by shifting with the sun direction
       const sunDir = this.atmosphere.sunDir;
@@ -266,7 +266,7 @@ export class Clouds {
     const resid = this.driftAt(this.uTime as unknown as NF).sub(
       vec2(this.uDriftBase) as unknown as NV2,
     );
-    const uv = wxz.sub(resid).div(SHADOW_WORLD).add(0.5);
+    const uv = wxz.sub(resid).div(shadowWorld()).add(0.5);
     const inside = smoothstep(0.0, 0.02, uv.x)
       .mul(smoothstep(1.0, 0.98, uv.x))
       .mul(smoothstep(0.0, 0.02, uv.y))

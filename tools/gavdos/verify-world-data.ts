@@ -19,7 +19,7 @@ const GAVDOS_CENTER_LON = 24.080;
 const GAVDOS_CENTER_LAT = 34.827;
 const M_PER_DEG_LAT = 111_132;
 const M_PER_DEG_LON = 91_393;
-const GAVDOS_CROP_HALF = 2048;
+const GAVDOS_CROP_HALF = 4096; // GAVDOS_WORLD_SIZE / 2 = 8192 / 2
 
 const SRC_WIDTH = 2048;
 const SRC_HEIGHT = 1664;
@@ -119,7 +119,7 @@ console.log('--- Assertion (a): Zero land on crop border ---');
 if (borderLandCount > 0) {
   console.warn(`WARN: ${borderLandCount} border texels have h > 0 (land touching crop edge).`);
   console.warn('Samples:', JSON.stringify(borderLandSamples));
-  console.warn('This means the island extends beyond the 4×4 km crop window.');
+  console.warn('This means the island extends beyond the 8×8 km crop window.');
   console.warn('Expected for Gavdos: island is mostly contained, coast may clip slightly.');
 } else {
   console.log('PASS: No land texels on crop border (island fully contained in window).');

@@ -67,7 +67,7 @@ import { bilerpVec2Buffer, uvToGrid } from '../gpu/BufferSample';
 import { PERIOD_FBM } from '../gpu/passes/NoiseBake';
 import type { NF, NV2, NV3, NV4 } from '../gpu/TSLTypes';
 import type { Heightfield } from '../world/Heightfield';
-import { WORLD_SIZE } from '../world/WorldConst';
+import { worldSize } from '../world/WorldConst';
 import { FLOW_CYC } from './WaterMaterial';
 
 /** world meters spanned by one caustic tile */
@@ -213,7 +213,7 @@ export function causticTint(wp: NV3, depthIn?: NF): NF {
   const surf = wp.xz.sub(rDir.xz.mul(depth.max(0).div(rDir.y.negate().max(0.25))));
 
   // two-phase flowmap advection — same cycle as the water ripples/foam
-  const g = uvToGrid(clamp(surf.div(WORLD_SIZE).add(0.5), 0, 1), hf.simRes);
+  const g = uvToGrid(clamp(surf.div(worldSize()).add(0.5), 0, 1), hf.simRes);
   const flowV = bilerpVec2Buffer(flow.flowDir, hf.simRes, g);
   const vel = flowV.mul(1.9).add(vec2(0.045, 0.03));
   const ph1 = fract(time.mul(FLOW_CYC));

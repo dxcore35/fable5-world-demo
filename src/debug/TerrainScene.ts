@@ -23,8 +23,9 @@ import { buildCanopyShell } from '../world/CanopyShell';
 import { Heightfield } from '../world/Heightfield';
 import { buildTerrainShadowProxy } from '../world/ShadowProxy';
 import { makeMacroParams } from '../world/MacroMap';
-import { qualityConfig } from '../world/WorldConst';
+import { qualityConfig, setActiveWorldSize } from '../world/WorldConst';
 import { buildGavdosHeightfield } from '../gavdos/GavdosWorld';
+import { GAVDOS_WORLD_SIZE } from '../gavdos/GavdosConst';
 import { TerrainTiles } from '../world/TerrainTiles';
 import { WaterSurface } from '../world/WaterSurface';
 import { PostStack } from '../render/PostStack';
@@ -38,6 +39,8 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
 
   let hf: Heightfield;
   if (params.world === 'gavdos') {
+    // Set world size BEFORE any system is constructed (gavdos = full island 8192 m)
+    setActiveWorldSize(GAVDOS_WORLD_SIZE);
     // Real-data world: skip procedural synthesis/erosion/hydrology
     const cfg = qualityConfig(params.preset);
     const mp = makeMacroParams(seed); // neutral mp (only far-shell analytic uses it)
@@ -47,11 +50,11 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
       mp,
       (p, m) => ctx.progress(p * 0.92, m),
     );
-    // Gavdos spawn: 800 m above origin, looking north (−Z) over the island
+    // Gavdos spawn: 1400 m above origin — whole island reads in frame at 8192 m world size
     if (params.cam === null) {
-      ctx.hooks.initialPose = { p: [0, 800, 0], yaw: 0, pitch: -0.8 };
+      ctx.hooks.initialPose = { p: [0, 1400, 0], yaw: 0, pitch: -0.8 };
       ctx.hooks.initialPoseMode = 'fly';
-      engine.camera.position.set(0, 800, 0);
+      engine.camera.position.set(0, 1400, 0);
     }
   } else {
     hf = await Heightfield.generate(

@@ -15,7 +15,7 @@ import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import { positionLocal, vec2, vec3 } from 'three/tsl';
 import type { Heightfield } from './Heightfield';
-import { WORLD_SIZE } from './WorldConst';
+import { worldSize } from './WorldConst';
 
 const GRID = 512;
 
@@ -25,9 +25,9 @@ export function buildTerrainShadowProxy(hf: Heightfield): Mesh {
   for (let z = 0; z < n; z++) {
     for (let x = 0; x < n; x++) {
       const i = (z * n + x) * 3;
-      pos[i] = (x / GRID - 0.5) * WORLD_SIZE;
+      pos[i] = (x / GRID - 0.5) * worldSize();
       pos[i + 1] = 0;
-      pos[i + 2] = (z / GRID - 0.5) * WORLD_SIZE;
+      pos[i + 2] = (z / GRID - 0.5) * worldSize();
     }
   }
   const idx = new Uint32Array(GRID * GRID * 6);

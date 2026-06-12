@@ -45,7 +45,7 @@ import {
   vec3,
   vec4,
 } from 'three/tsl';
-import { WORLD_SIZE } from '../../world/WorldConst';
+import { worldSize } from '../../world/WorldConst';
 import type { Heightfield } from '../../world/Heightfield';
 import type { Atmosphere } from '../../sky/Atmosphere';
 import { SUN_E } from '../../sky/Atmosphere';
@@ -125,7 +125,7 @@ export class ProbeGI {
     const canopy = this.canopyTex;
     const covAt = (wxz: NV2): NF => {
       if (!canopy) return float(0);
-      const uv = wxz.div(WORLD_SIZE).add(0.5);
+      const uv = wxz.div(worldSize()).add(0.5);
       return (texture(canopy, uv, 0) as unknown as { x: NF }).x;
     };
 
@@ -162,7 +162,7 @@ export class ProbeGI {
     // ground-hit radiance proxy: biome palette × (sun + sky fudge)
     const sunDir = this.atmosphere.sunDir;
     const hitRadiance = (hp: NV3): NV3 => {
-      const uv = hp.xz.div(WORLD_SIZE).add(0.5);
+      const uv = hp.xz.div(worldSize()).add(0.5);
       const bio = texture(hf.biomeTex as NonNullable<typeof hf.biomeTex>, uv, 0);
       const nrm = texture(hf.normalTex, uv, 0).xyz;
       const grass = vec3(0.16, 0.2, 0.09);
@@ -218,8 +218,8 @@ export class ProbeGI {
       const rem = pid.mod(PROBE_XZ * PROBE_XZ);
       const px = rem.mod(PROBE_XZ);
       const pz = rem.div(PROBE_XZ);
-      const wx = float(px).add(0.5).div(PROBE_XZ).sub(0.5).mul(WORLD_SIZE);
-      const wz = float(pz).add(0.5).div(PROBE_XZ).sub(0.5).mul(WORLD_SIZE);
+      const wx = float(px).add(0.5).div(PROBE_XZ).sub(0.5).mul(worldSize());
+      const wz = float(pz).add(0.5).div(PROBE_XZ).sub(0.5).mul(worldSize());
       const ground = heightAt(vec2(wx, wz));
       const layerH = float(LAYER_BASE).mul(
         float(LAYER_RATIO).pow(float(lay)),
@@ -357,8 +357,8 @@ export class ProbeGI {
       PROBE_LAYERS - 1,
     );
     const uvw = vec3(
-      wp.x.div(WORLD_SIZE).add(0.5),
-      wp.z.div(WORLD_SIZE).add(0.5),
+      wp.x.div(worldSize()).add(0.5),
+      wp.z.div(worldSize()).add(0.5),
       li.add(0.5).div(PROBE_LAYERS),
     );
     const R = texture3D(this.texR, uvw, 0);

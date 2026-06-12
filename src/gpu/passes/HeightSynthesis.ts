@@ -8,7 +8,7 @@ import type { Renderer, StorageBufferNode } from 'three/webgpu';
 import { Fn, If, Return, float, instanceIndex, instancedArray, vec2 } from 'three/tsl';
 import type { MacroParams } from '../../world/MacroMap';
 import { macroTerrain } from '../../world/MacroMap';
-import { WORLD_SIZE } from '../../world/WorldConst';
+import { worldSize } from '../../world/WorldConst';
 
 export type FloatBuffer = StorageBufferNode<'float'>;
 
@@ -38,7 +38,7 @@ export async function runHeightSynthesis(
     const wpos = vec2(float(x).add(0.5), float(y).add(0.5))
       .div(res)
       .sub(0.5)
-      .mul(WORLD_SIZE);
+      .mul(worldSize());
     const m = macroTerrain(wpos, mp, 'full');
     height.element(i).assign(m.height);
     hardness.element(i).assign(m.hardness);

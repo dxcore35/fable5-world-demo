@@ -35,7 +35,7 @@ import {
   vec2,
 } from 'three/tsl';
 import { valleyFields, type MacroParams } from '../../world/MacroMap';
-import { WORLD_SIZE } from '../../world/WorldConst';
+import { worldSize } from '../../world/WorldConst';
 import { bilerpFloatBuffer } from '../BufferSample';
 import { hash12 } from '../noise/NoiseTSL';
 import type { NB, NF, NI, NU } from '../TSLTypes';
@@ -145,7 +145,7 @@ export async function runFlowRivers(
     const wpos = vec2(float(x).add(0.5), float(y).add(0.5))
       .div(res)
       .sub(0.5)
-      .mul(WORLD_SIZE);
+      .mul(worldSize());
     const vf = valleyFields(wpos, opts.mp);
     // fade enforcement across the lake exactly like the synthesis trench,
     // otherwise we'd cut the outlet sill and drain the lake

@@ -6,12 +6,13 @@
  * → north is −Z in world space → NORTH_SIGN = -1
  *   (a point north of origin has a more-negative world Z)
  *
- * WORLD_SIZE fallback path taken: WORLD_SIZE=4096 (engine constant)
- * with M-scaled crop CENTER ± 2048 m. Parameterizing 8192 would require
- * touching >10 subsystems (Scatter, BiomeSnow, Heightfield, TerrainTiles,
- * ProbeGI, Froxels, Particles, GroundRing, Caustics, WaterMaterial,
- * CanopyShell, ShadowProxy). V1 shows the central 4×4 km of the island.
+ * World size: 8192 m (full island + sea margin).
+ * setActiveWorldSize(GAVDOS_WORLD_SIZE) is called in TerrainScene.ts
+ * before any world system is constructed.
  */
+
+/** Full-island world size in meters (8192 = CENTER ± 4096 m). */
+export const GAVDOS_WORLD_SIZE = 8192;
 
 /** World center in geographic coordinates */
 export const GAVDOS_CENTER_LON = 24.080;
@@ -23,10 +24,10 @@ export const M_PER_DEG_LAT = 111_132;
 export const M_PER_DEG_LON = 91_393;
 
 /**
- * World window radius in meters (engine WORLD_SIZE / 2 = 2048 m).
- * V1 shows the central 4×4 km of Gavdos (full 8×8 km needs WORLD_SIZE=8192).
+ * World window half-extent in meters (GAVDOS_WORLD_SIZE / 2 = 4096 m).
+ * Full island + sea margin: CENTER ± 4096 m.
  */
-export const GAVDOS_CROP_HALF = 2048; // meters
+export const GAVDOS_CROP_HALF = GAVDOS_WORLD_SIZE / 2; // 4096 meters
 
 /**
  * North sign in Three.js world coordinates.

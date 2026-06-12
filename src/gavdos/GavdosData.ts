@@ -52,7 +52,7 @@ import {
 } from 'three/tsl';
 import { bakeNoiseTextures } from '../gpu/passes/NoiseBake';
 import type { FloatBuffer } from '../gpu/passes/HeightSynthesis';
-import { Biome, WORLD_SIZE } from '../world/WorldConst';
+import { Biome, worldSize } from '../world/WorldConst';
 import {
   CROP_H,
   CROP_W,
@@ -376,7 +376,7 @@ export async function loadGavdosData(
   normalTex.type = HalfFloatType;
   normalTex.generateMipmaps = false;
 
-  const texelSize = WORLD_SIZE / heightRes;
+  const texelSize = worldSize() / heightRes;
   const derivedKernel = Fn(() => {
     const i = instanceIndex;
     If(i.greaterThanEqual(heightRes * heightRes), () => { Return(); });

@@ -34,7 +34,7 @@ import { fbm3 } from '../gpu/noise/NoiseTSL';
 import { grassTranslucency } from '../render/VegMaterials';
 import type { NF, NV2, NV3 } from '../gpu/TSLTypes';
 import type { Heightfield } from './Heightfield';
-import { WORLD_SIZE } from './WorldConst';
+import { worldSize } from './WorldConst';
 
 const GRID = 512;
 const FADE_IN = 620;
@@ -49,9 +49,9 @@ export function buildCanopyShell(
   for (let z = 0; z < n; z++) {
     for (let x = 0; x < n; x++) {
       const i = (z * n + x) * 3;
-      pos[i] = (x / GRID - 0.5) * WORLD_SIZE;
+      pos[i] = (x / GRID - 0.5) * worldSize();
       pos[i + 1] = 0;
-      pos[i + 2] = (z / GRID - 0.5) * WORLD_SIZE;
+      pos[i + 2] = (z / GRID - 0.5) * worldSize();
     }
   }
   const idx = new Uint32Array(GRID * GRID * 6);
@@ -91,7 +91,7 @@ export function buildCanopyShell(
 
   mat.positionNode = Fn(() => {
     const p = vec2(positionLocal.x, positionLocal.z);
-    const e = float(WORLD_SIZE / GRID);
+    const e = float(worldSize() / GRID);
     const y0 = shellY(p).toVar();
     const yx = shellY(p.add(vec2(e, 0))).toVar();
     const yz = shellY(p.add(vec2(0, e))).toVar();

@@ -45,7 +45,7 @@ import {
 import { hash13 } from '../noise/NoiseTSL';
 import type { NF, NV2, NV3, NV4 } from '../TSLTypes';
 import type { Heightfield } from '../../world/Heightfield';
-import { WORLD_SIZE } from '../../world/WorldConst';
+import { worldSize } from '../../world/WorldConst';
 import { canopyAt } from './Scatter';
 import type { ProbeGI } from './ProbeGI';
 import { gustAt, windContext, windU } from '../../render/Wind';
@@ -76,7 +76,7 @@ export class Particles {
     if (!biomeTex) throw new Error('particles need the biome texture');
 
     const rollType = (p: NV3, h: NF): NF => {
-      const uvW = clamp(p.xz.div(WORLD_SIZE).add(0.5), 0, 1);
+      const uvW = clamp(p.xz.div(worldSize()).add(0.5), 0, 1);
       const snow = (texture(biomeTex, uvW, 0) as unknown as NV4).y;
       const cov = canopyTex ? canopyAt(canopyTex, p.xz) : (float(0) as NF);
       const isSnow = snow.greaterThan(0.35);
