@@ -13,13 +13,9 @@
 import { readFileSync } from 'fs';
 import { join, resolve } from 'path';
 
-// --- Import GavdosConst values inline (avoids browser-only imports) ----------
+// --- Geodesy from the single source of truth ---------------------------------
 // Recomputed here verbatim from GavdosConst.ts so this file is node-runnable.
-const GAVDOS_CENTER_LON = 24.080;
-const GAVDOS_CENTER_LAT = 34.827;
-const M_PER_DEG_LAT = 111_132;
-const M_PER_DEG_LON = 91_393;
-const GAVDOS_CROP_HALF = 4096; // GAVDOS_WORLD_SIZE / 2 = 8192 / 2
+import { GAVDOS_CENTER_LON, GAVDOS_CENTER_LAT, M_PER_DEG_LAT, M_PER_DEG_LON, GAVDOS_CROP_HALF } from "../../src/gavdos/GavdosConst";
 
 const SRC_WIDTH = 2048;
 const SRC_HEIGHT = 1664;

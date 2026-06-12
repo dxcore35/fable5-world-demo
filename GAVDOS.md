@@ -56,6 +56,7 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
 - Far field: engine far shell (macroTerrain 'far' on neutral mp) renders procedural hills beyond
   world edge. Not flat sea. Noted as deviation from spec — T3 will add ocean plane.
 - Water level: 0 (sea level). LAKE_LEVEL=142 is bypassed — no hydrology pass in gavdos.
+- T2c (orchestrator): measured island extents 8.8×8.4 km — 8192 clipped E+N coasts. WORLD_SIZE → 10240, center (24.0846, 34.8387), M_PER_DEG_LON 91376. Roadmask rebuilt for new window. verify-world-data + iou now IMPORT GavdosConst (they had duplicated stale consts). Gates: border land texels 0, max h 367.94, IoU 0.9641, typecheck 0.
 ### T3 ocean & shore — status: pending
 ### T4 mediterranean vegetation — status: pending
 ### T5 buildings/roads/walls — status: pending

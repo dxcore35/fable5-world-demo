@@ -7,7 +7,7 @@
  * with Gavdos DEM data.
  *
  * World-size path taken: WORLD_SIZE=4096 (engine constant). Parameterizing
- * 8192 would touch >10 subsystems. V1 shows the central 4×4 km of Gavdos
+ * World size 10240 m via setActiveWorldSize — full island (see GavdosConst)
  * (CENTER ± 2048 m ≈ lon [24.058, 24.102] / lat [34.808, 34.846]).
  *
  * Water level: 0 m (sea level). The procedural LAKE_LEVEL=142 is bypassed

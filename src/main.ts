@@ -63,7 +63,12 @@ async function boot(): Promise<void> {
   registerScene('shadowtest', buildShadowTestScene);
   // 'world' becomes the streamed open world once terrain tiles land.
   registerScene('world', buildTerrainScene);
-  // 'gavdos' = same render scene but with real DEM data behind ?world=gavdos
+  // 'gavdos' = same render scene but with real DEM data behind ?world=gavdos.
+  // The scene name implies the world source so `?scene=gavdos` (and tools/shoot.ts,
+  // which has no world passthrough) boots the real island without a second param.
+  if (params.scene === 'gavdos' && params.world !== 'gavdos') {
+    params.world = 'gavdos';
+  }
   registerScene('gavdos', buildTerrainScene);
 
   const ctx: WorldContext = {

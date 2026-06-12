@@ -39,7 +39,7 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
 
   let hf: Heightfield;
   if (params.world === 'gavdos') {
-    // Set world size BEFORE any system is constructed (gavdos = full island 8192 m)
+    // Set world size BEFORE any system is constructed (gavdos = full island 10240 m)
     setActiveWorldSize(GAVDOS_WORLD_SIZE);
     // Real-data world: skip procedural synthesis/erosion/hydrology
     const cfg = qualityConfig(params.preset);
@@ -50,11 +50,11 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
       mp,
       (p, m) => ctx.progress(p * 0.92, m),
     );
-    // Gavdos spawn: 1400 m above origin — whole island reads in frame at 8192 m world size
+    // Gavdos spawn: 1800 m above origin — whole island reads in frame at 10240 m world size
     if (params.cam === null) {
-      ctx.hooks.initialPose = { p: [0, 1400, 0], yaw: 0, pitch: -0.8 };
+      ctx.hooks.initialPose = { p: [0, 1800, 0], yaw: 0, pitch: -0.8 };
       ctx.hooks.initialPoseMode = 'fly';
-      engine.camera.position.set(0, 1400, 0);
+      engine.camera.position.set(0, 1800, 0);
     }
   } else {
     hf = await Heightfield.generate(

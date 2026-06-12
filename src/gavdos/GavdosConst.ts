@@ -6,28 +6,32 @@
  * → north is −Z in world space → NORTH_SIGN = -1
  *   (a point north of origin has a more-negative world Z)
  *
- * World size: 8192 m (full island + sea margin).
+ * World size: 10240 m (full island + sea margin).
+ * Measured main-island land extents in the source DEM (h > 0):
+ *   lon 24.0366..24.1325, lat 34.8010..34.8763  (≈ 8.8 × 8.4 km)
+ * → 8192 m clipped the east (~700 m) and north (~1.4 km) coasts;
+ *   10240 m centered below leaves 690–1050 m of sea on every side.
  * setActiveWorldSize(GAVDOS_WORLD_SIZE) is called in TerrainScene.ts
  * before any world system is constructed.
  */
 
-/** Full-island world size in meters (8192 = CENTER ± 4096 m). */
-export const GAVDOS_WORLD_SIZE = 8192;
+/** Full-island world size in meters (10240 = CENTER ± 5120 m). */
+export const GAVDOS_WORLD_SIZE = 10_240;
 
-/** World center in geographic coordinates */
-export const GAVDOS_CENTER_LON = 24.080;
-export const GAVDOS_CENTER_LAT = 34.827;
+/** World center in geographic coordinates (midpoint of measured land extents) */
+export const GAVDOS_CENTER_LON = 24.0846;
+export const GAVDOS_CENTER_LAT = 34.8387;
 
 /** Meters per degree at this latitude */
 export const M_PER_DEG_LAT = 111_132;
-/** 111320 × cos(34.827°) ≈ 91393 */
-export const M_PER_DEG_LON = 91_393;
+/** 111320 × cos(34.8387°) ≈ 91376 */
+export const M_PER_DEG_LON = 91_376;
 
 /**
- * World window half-extent in meters (GAVDOS_WORLD_SIZE / 2 = 4096 m).
- * Full island + sea margin: CENTER ± 4096 m.
+ * World window half-extent in meters (GAVDOS_WORLD_SIZE / 2 = 5120 m).
+ * Full island + sea margin: CENTER ± 5120 m.
  */
-export const GAVDOS_CROP_HALF = GAVDOS_WORLD_SIZE / 2; // 4096 meters
+export const GAVDOS_CROP_HALF = GAVDOS_WORLD_SIZE / 2; // 5120 meters
 
 /**
  * North sign in Three.js world coordinates.

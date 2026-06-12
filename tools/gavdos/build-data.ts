@@ -26,10 +26,17 @@ const CACHE_DIR = path.resolve(__dirname, ".cache");
 const CACHE_FILE = path.join(CACHE_DIR, "overpass.json");
 
 // World window for roadmask
-const ROAD_LON_MIN = 24.0352;
-const ROAD_LON_MAX = 24.1248;
-const ROAD_LAT_MIN = 34.7901;
-const ROAD_LAT_MAX = 34.8639;
+// Window comes from the single geodesy source of truth (node-importable, dependency-free)
+import {
+  GAVDOS_WIN_WEST,
+  GAVDOS_WIN_EAST,
+  GAVDOS_WIN_SOUTH,
+  GAVDOS_WIN_NORTH,
+} from "../../src/gavdos/GavdosConst";
+const ROAD_LON_MIN = GAVDOS_WIN_WEST;
+const ROAD_LON_MAX = GAVDOS_WIN_EAST;
+const ROAD_LAT_MIN = GAVDOS_WIN_SOUTH;
+const ROAD_LAT_MAX = GAVDOS_WIN_NORTH;
 const RASTER_SIZE = 4096;
 
 // Overpass bbox: south,west,north,east
