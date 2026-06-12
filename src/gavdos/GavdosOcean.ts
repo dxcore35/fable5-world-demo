@@ -39,7 +39,7 @@
  *     the world edge for gavdos (the real island ends well inside the window).
  */
 
-import { BufferAttribute, BufferGeometry, Group, Mesh, RingGeometry, Vector2, Vector4 } from 'three';
+import { BufferAttribute, BufferGeometry, CircleGeometry, Group, Mesh, Vector2, Vector4 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import type { PerspectiveCamera } from 'three';
 import {
@@ -326,6 +326,10 @@ function buildOceanMaterial(
 }
 
 // ---- Far sea disc material (cheap flat, atmosphere-matched) -----------------
+// The disc covers 0→FAR_RADIUS (full disc, inner radius 0) and sits at y=-0.05
+// so the clipmap levels (y=0) always draw on top without z-fighting.
+// Color matches the clipmap's deep-water branch (same deepCol + fresnel sky
+// reflection) so the seam is invisible.
 
 function buildFarSeaMaterial(atm: Atmosphere): MeshStandardNodeMaterial {
   const mat = new MeshStandardNodeMaterial();
@@ -334,22 +338,25 @@ function buildFarSeaMaterial(atm: Atmosphere): MeshStandardNodeMaterial {
   mat.metalness = 0;
   mat.roughness = 0.07;
 
-  // Flat sea at y=0 — position from geometry
-  // Colour: deep navy with slight reflection of the sky horizon
+  // Flat sea at y=-0.05 — position from geometry (slight bias so clipmap wins)
+  // Colour: deep navy matching clipmap deepCol, with sky fresnel reflection
   const toCam = cameraPosition.sub(positionWorld);
   const dist = toCam.length();
   const viewDir = toCam.div(dist.max(float(1)));
   const rdir = vec3(viewDir.x.negate(), viewDir.y.abs().max(float(0.04)), viewDir.z.negate()).normalize();
   const skyCol = atm.skyColor(rdir) as unknown as NV3;
-  // Horizon fresnel: at long distance the sea goes nearly mirror-flat
+  // Fresnel: identical to clipmap deep-water branch
   const cosT = clamp(viewDir.y.abs(), float(0), float(1));
   const fres = float(0.02).add(float(0.98).mul(cosT.oneMinus().pow(5)));
+  // Same deepCol constant as clipmap (0.02, 0.06, 0.22) — no mismatch
   const deepCol = vec3(0.02, 0.06, 0.22);
   mat.emissiveNode = mix(deepCol, skyCol, fres);
   mat.colorNode = vec3(0);
-  // Fade in from world edge, fully opaque beyond
-  const edgeDist = positionWorld.xz.length().sub(float(worldHalf() * 0.95));
-  mat.opacityNode = smoothstep(float(0), float(worldHalf() * 0.05), edgeDist).mul(float(0.96));
+  // Always fully opaque — clipmap draws over us inside the window, atmosphere
+  // hazes beyond FAR_RADIUS.  No ring-fade needed: the disc is invisible under
+  // the clipmap (y=-0.05 loses depth test) and visible only where clipmap
+  // doesn't reach.
+  mat.opacityNode = float(0.96);
 
   return mat;
 }
@@ -394,12 +401,18 @@ export class GavdosOcean {
       });
     }
 
-    // Far sea disc: replaces the procedural far-shell hills beyond the window
-    const ring = new RingGeometry(worldHalf() * 0.96, FAR_RADIUS, 120, 4);
-    ring.rotateX(-Math.PI / 2);
+    // Far sea disc: full circle (inner radius 0) covering 0→FAR_RADIUS.
+    // Sits at y=-0.05 so the clipmap (y=0) always wins the depth test and draws
+    // on top — no visible boundary between clipmap and disc.
+    // This eliminates the coverage gap that existed when using RingGeometry with
+    // inner radius = worldHalf*0.96: from an offshore camera the ring's inner
+    // hole exposed bare seabed in the far side of the window that the clipmap
+    // didn't reach.
+    const disc = new CircleGeometry(FAR_RADIUS, 120);
+    disc.rotateX(-Math.PI / 2);
     const farMat = buildFarSeaMaterial(atm);
-    const farDisc = new Mesh(ring, farMat);
-    farDisc.position.y = 0;
+    const farDisc = new Mesh(disc, farMat);
+    farDisc.position.y = -0.05;
     farDisc.frustumCulled = false;
     farDisc.castShadow = false;
     farDisc.receiveShadow = false;

@@ -98,9 +98,17 @@ terrain" for Kastri framing. Cannot fix within bookmark scope without violating 
 ## KNOWN GAPS / POLISH list
 
 ### Still true from prior task notes (verified):
-- **Square seam terrain/sea-disc**: The 10240m terrain grid meets the far RingGeometry sea
-  disc at worldHalf·0.96. At oblique angles this seam is visible as a slight tone shift.
-  Status: CONFIRMED still present in bookmark-8.png (offshore view shows band).
+- **Square seam terrain/sea-disc**: FIXED (2026-06-13, Fix-Agent-3b). Root cause: (1) the
+  far sea was a RingGeometry(worldHalf·0.96, FAR_RADIUS) centered on world origin — from an
+  offshore camera the ring's inner hole exposed bare seabed in the window quadrant opposite
+  the camera (gap up to 3872 m unwatered at bookmark-8 pose); (2) color mismatch between
+  clipmap material (Beer-Lambert + fresnel) and far-disc material produced a darker rectangle.
+  Fix: replaced RingGeometry with CircleGeometry(FAR_RADIUS, 120) (inner radius 0, covers
+  entire disc), positioned at y=-0.05 so clipmap (y=0) always wins depth test; unified
+  far-disc color/fresnel to match clipmap deepCol (0.02, 0.06, 0.22) + same sky-fresnel blend.
+  Evidence: bookmark-8 NE sea px(1500,400) R=111 G=141 B=170, px(1700,350) R=129 G=156 B=179,
+  px(1350,600) R=113 G=121 B=136, px(1600,500) R=75 G=110 B=147 — all BLUE-DOM. Topdown
+  window-edge px(300,540) R=126 G=137 B=163, px(1620,540) R=134 G=143 B=166 — both BLUE-DOM.
 - **Shallow-ring tint circle**: The Beer-Lambert depth gradient produces a visible circular
   turquoise tint band around the island at ~50-200m depth (visible in top-down shots). This
   is a GMRT bathymetry artefact — the shelf-break is very abrupt. Status: CONFIRMED.

@@ -89,6 +89,12 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
 - Far shell: replaced with a flat sea disc (emissive-only material). The procedural
   macroTerrain 'far' hills are hidden (tiles.farShell.visible = false).
 
+#### T3 patch — full-window ocean coverage (2026-06-13, Fix-Agent-3b)
+Far sea RingGeometry(worldHalf·0.96, FAR_RADIUS) replaced with CircleGeometry(FAR_RADIUS)
+(inner radius 0, y=-0.05) so the disc underlies the entire scene; clipmap wins depth at y=0.
+Eliminates 3872 m bare-seabed gap visible from offshore cameras (bookmark-8 NE quadrant).
+Far-disc color unified to match clipmap deepCol + same sky-fresnel blend — no darker rectangle.
+
 #### T3 verification (commit c15860e)
 - typecheck: PASS (exit 0)
 - topdown-ocean.png: island silhouette against blue sea ✓
