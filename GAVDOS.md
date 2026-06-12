@@ -57,7 +57,60 @@ CENTER 24.080 E / 34.827 N · M_PER_DEG_LAT 111132 · M_PER_DEG_LON 91393 · GAV
   world edge. Not flat sea. Noted as deviation from spec — T3 will add ocean plane.
 - Water level: 0 (sea level). LAKE_LEVEL=142 is bypassed — no hydrology pass in gavdos.
 - T2c (orchestrator): measured island extents 8.8×8.4 km — 8192 clipped E+N coasts. WORLD_SIZE → 10240, center (24.0846, 34.8387), M_PER_DEG_LON 91376. Roadmask rebuilt for new window. verify-world-data + iou now IMPORT GavdosConst (they had duplicated stale consts). Gates: border land texels 0, max h 367.94, IoU 0.9641, typecheck 0.
-### T3 ocean & shore — status: pending
+### T3 ocean & shore — status: done
+- `src/gavdos/GavdosOcean.ts`: new file — self-contained Mediterranean ocean system.
+  - Near clipmap: 6 concentric levels (same CELLS/LEVEL_CELL as WaterSurface) at y=0,
+    covering the full 10240 m window. No hf.flow required.
+  - Far sea disc: RingGeometry(worldHalf·0.96, FAR_RADIUS), flat at y=0 with a
+    cheap emissive material (sky-fresnel horizon blend → deep navy→mirrored sky).
+    Replaces the procedural far-shell hills for gavdos.
+  - `tiles.farShell.visible = false` in TerrainScene.ts for gavdos branch.
+  - Depth-aware colour: `hf.sampleHeight(xz)` (negative = below sea) drives
+    Beer-Lambert absorption (SIGMA same as WaterMaterial) + seaTint gradient
+    shallow turquoise (0–12 m) → deep navy. Mediterranean coefficients.
+  - Shore foam: runtime depth band (|h| < 1.5 m), two-phase fbm pattern advected
+    by a constant WNW breeze (no flow field). Simpler and more accurate than shore.png
+    UV-remapping (shore.png bbox = full 0.3°×0.2° source, not window-cropped).
+  - Waves: two-layer fbm at CYC=0.32 Hz, rippleAmp=0.004 → < 5° normal tilt.
+    Mediterranean feel — wind-chop, not lake-still, not stormy.
+  - SSR/reflections: 18-step march + sky-view LUT fallback, reused from WaterMaterial.
+  - Caustics: OFF — hf.flow null in gavdos. Flagged deviation.
+  - WaterMaterial.ts / WaterSurface.ts: NOT touched. Default world path bit-identical.
+- `src/debug/TerrainScene.ts`: wired at [GAVDOS-WATER-HOOK]. `let tiles` hoisted to
+  allow `tiles.farShell.visible = false` from the water block below.
+
+#### T3 deviations
+- Caustics disabled: CausticsBake requires hf.flow (hydrology output), which is null
+  in gavdos (no hydrology pass). Cannot fake flow data — left off per spec.
+- Shore foam source: runtime depth band (h < 1.5 m), NOT shore.png.
+  Rationale: shore.png covers the full 2048×1664 source grid bbox, not the 10240 m
+  window; resampling it in the shader requires an extra UV transform + texture fetch.
+  Runtime depth from the DEM is zero extra cost and more spatially accurate.
+- Far shell: replaced with a flat sea disc (emissive-only material). The procedural
+  macroTerrain 'far' hills are hidden (tiles.farShell.visible = false).
+
+#### T3 verification (commit c15860e)
+- typecheck: PASS (exit 0)
+- topdown-ocean.png: island silhouette against blue sea ✓
+- ocean-sarakiniko.png: turquoise shallow water + foam strip at waterline ✓
+- ocean-south.png: deep navy far sea disc to horizon ✓
+- Deep-sea pixels (B > R and B > 40):
+  topdown left-sea  [60,540]:  RGB(94,111,145)  ✓
+  topdown left-sea  [80,300]:  RGB(60,90,138)   ✓
+  south deep [400,700]: RGB(64,89,125)           ✓
+  south deep [960,700]: RGB(53,80,119)           ✓
+  south deep [1500,700]: RGB(63,87,122)          ✓
+- Land pixels (NOT blue-dominant):
+  island-center1 [900,500]: RGB(188,187,174) ✓
+  island-center2 [800,400]: RGB(174,169,157) ✓
+  island-center3 [1000,550]: RGB(167,161,147) ✓
+- Shore transect x=150, sarakiniko (land→sea at y≈460):
+  y=460 land  RGB(112,102,92) bright=102 (not blue-dom) ✓
+  y=470 shore RGB(102,123,138) bright=121 (blue-dom, brightness peak) ✓
+  y=690 deep  RGB(66,95,104) bright=88 (deeper) ✓
+  Brightness peak at waterline confirmed.
+- Data-pipeline IoU: 0.9641 PASS ≥ 0.95
+- Default-world regression: terrain.maxH=1857, caustics running, no errors ✓
 ### T4 mediterranean vegetation — status: pending
 ### T5 buildings/roads/walls — status: pending
 ### T6 QA battery + bookmarks — status: pending
