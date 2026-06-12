@@ -1,0 +1,2083 @@
+[
+  {
+    "name": "Agios Nikolaos",
+    "lng": 25.717522,
+    "lat": 35.19059,
+    "type": "city",
+    "rank": 5
+  },
+  {
+    "name": "Chania",
+    "lng": 24.019154,
+    "lat": 35.512083,
+    "type": "city",
+    "rank": 5
+  },
+  {
+    "name": "Heraklion",
+    "lng": 25.133284,
+    "lat": 35.33908,
+    "type": "city",
+    "rank": 5
+  },
+  {
+    "name": "Rethymno",
+    "lng": 24.473608,
+    "lat": 35.367647,
+    "type": "city",
+    "rank": 5
+  },
+  {
+    "name": "Agathias",
+    "lng": 24.783552,
+    "lat": 35.220177,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2424.0
+  },
+  {
+    "name": "Agia Galini",
+    "lng": 24.688485,
+    "lat": 35.097145,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Agio Pnevma",
+    "lng": 24.060296,
+    "lat": 35.332354,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2262.0
+  },
+  {
+    "name": "Agía Marína",
+    "lng": 23.928945,
+    "lat": 35.519278,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Akrotirianos",
+    "lng": 24.096618,
+    "lat": 35.319193,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2056.0
+  },
+  {
+    "name": "Anthropolitos",
+    "lng": 24.027465,
+    "lat": 35.330069,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2098.0
+  },
+  {
+    "name": "Archanes",
+    "lng": 25.160015,
+    "lat": 35.235557,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Arkalochori",
+    "lng": 25.265795,
+    "lat": 35.14643,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Askyfiotikos Soros",
+    "lng": 24.078683,
+    "lat": 35.315892,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2213.0
+  },
+  {
+    "name": "Bournelos",
+    "lng": 24.042841,
+    "lat": 35.301491,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2342.0
+  },
+  {
+    "name": "Dipli Thodori",
+    "lng": 24.052033,
+    "lat": 35.276316,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2380.0
+  },
+  {
+    "name": "Dokhi",
+    "lng": 24.090921,
+    "lat": 35.284318,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2149.0
+  },
+  {
+    "name": "Exo Tourloti",
+    "lng": 24.02736,
+    "lat": 35.275159,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2240.0
+  },
+  {
+    "name": "Fanari",
+    "lng": 24.111864,
+    "lat": 35.302721,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2170.0
+  },
+  {
+    "name": "Gavala",
+    "lng": 24.043919,
+    "lat": 35.291699,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2350.0
+  },
+  {
+    "name": "Gazi",
+    "lng": 25.066383,
+    "lat": 35.325759,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Goniasmata",
+    "lng": 24.077961,
+    "lat": 35.301682,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2015.0
+  },
+  {
+    "name": "Gremnaras",
+    "lng": 24.018363,
+    "lat": 35.295671,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2344.0
+  },
+  {
+    "name": "Grias Soros",
+    "lng": 24.064584,
+    "lat": 35.317745,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2313.0
+  },
+  {
+    "name": "Ierapetra",
+    "lng": 25.739117,
+    "lat": 35.008094,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Kakovoli",
+    "lng": 24.084265,
+    "lat": 35.290284,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2214.0
+  },
+  {
+    "name": "Kastro",
+    "lng": 24.116271,
+    "lat": 35.298155,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2218.0
+  },
+  {
+    "name": "Katsouna Korifi",
+    "lng": 24.04213,
+    "lat": 35.28491,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2295.0
+  },
+  {
+    "name": "Kefalas",
+    "lng": 24.022627,
+    "lat": 35.319761,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2125.0
+  },
+  {
+    "name": "Kentakia",
+    "lng": 24.038793,
+    "lat": 35.272764,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2243.0
+  },
+  {
+    "name": "Kissamos",
+    "lng": 23.65947,
+    "lat": 35.493344,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Korifi Sternes",
+    "lng": 24.056332,
+    "lat": 35.296241,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2335.0
+  },
+  {
+    "name": "Kounoupidiana",
+    "lng": 24.076749,
+    "lat": 35.534809,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Kousakas",
+    "lng": 24.809718,
+    "lat": 35.217386,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2209.0
+  },
+  {
+    "name": "Koutalas",
+    "lng": 24.105778,
+    "lat": 35.315577,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2002.0
+  },
+  {
+    "name": "Lazaros",
+    "lng": 25.520455,
+    "lat": 35.116202,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2085.0
+  },
+  {
+    "name": "Limenas Chersonisou",
+    "lng": 25.398541,
+    "lat": 35.312424,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Lines",
+    "lng": 24.007833,
+    "lat": 35.331782,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2093.0
+  },
+  {
+    "name": "Malia",
+    "lng": 25.462921,
+    "lat": 35.282668,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Melindaou",
+    "lng": 23.983622,
+    "lat": 35.329693,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2133.0
+  },
+  {
+    "name": "Mesa Soros",
+    "lng": 24.055491,
+    "lat": 35.311973,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2347.0
+  },
+  {
+    "name": "Mesa Tourloti",
+    "lng": 24.026215,
+    "lat": 35.281774,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2212.0
+  },
+  {
+    "name": "Mesokefáles",
+    "lng": 24.019178,
+    "lat": 35.275639,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2116.0
+  },
+  {
+    "name": "Modaki",
+    "lng": 24.034538,
+    "lat": 35.310594,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2224.0
+  },
+  {
+    "name": "Nea Alikarnassos",
+    "lng": 25.157909,
+    "lat": 35.342093,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Neapoli",
+    "lng": 25.606206,
+    "lat": 35.256882,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Northern Trocharis",
+    "lng": 24.083994,
+    "lat": 35.322,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2128.0
+  },
+  {
+    "name": "Pachnes",
+    "lng": 24.032113,
+    "lat": 35.291932,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2453.0
+  },
+  {
+    "name": "Paleochora",
+    "lng": 23.682185,
+    "lat": 35.230555,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Paspalomyti",
+    "lng": 24.105304,
+    "lat": 35.301189,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2157.0
+  },
+  {
+    "name": "Pavlias",
+    "lng": 24.07326,
+    "lat": 35.308445,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2065.0
+  },
+  {
+    "name": "Petrade",
+    "lng": 23.996276,
+    "lat": 35.319857,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2092.0
+  },
+  {
+    "name": "Platanos",
+    "lng": 23.599411,
+    "lat": 35.469219,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Psiloritis",
+    "lng": 24.770805,
+    "lat": 35.226311,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2456.0
+  },
+  {
+    "name": "Sitia",
+    "lng": 26.104971,
+    "lat": 35.206625,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Souda",
+    "lng": 24.065903,
+    "lat": 35.487117,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Spathi",
+    "lng": 25.497234,
+    "lat": 35.118057,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2148.0
+  },
+  {
+    "name": "Spili",
+    "lng": 24.536047,
+    "lat": 35.217872,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Stolistra",
+    "lng": 24.762118,
+    "lat": 35.234083,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2325.0
+  },
+  {
+    "name": "Svourikti",
+    "lng": 24.047353,
+    "lat": 35.318835,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2356.0
+  },
+  {
+    "name": "Trocharis",
+    "lng": 24.054409,
+    "lat": 35.280569,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2401.0
+  },
+  {
+    "name": "Tymbaki",
+    "lng": 24.76943,
+    "lat": 35.072192,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Vasiliki",
+    "lng": 24.029075,
+    "lat": 35.335836,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2000.0
+  },
+  {
+    "name": "Volakiás",
+    "lng": 23.927735,
+    "lat": 35.288069,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2117.0
+  },
+  {
+    "name": "Voulomenou",
+    "lng": 24.797094,
+    "lat": 35.222532,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2267.0
+  },
+  {
+    "name": "Zacharokefala",
+    "lng": 24.015354,
+    "lat": 35.275513,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2148.0
+  },
+  {
+    "name": "Zaranokefála",
+    "lng": 24.009582,
+    "lat": 35.269462,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2129.0
+  },
+  {
+    "name": "Zaros",
+    "lng": 24.904553,
+    "lat": 35.129841,
+    "type": "town",
+    "rank": 4
+  },
+  {
+    "name": "Zouridia",
+    "lng": 24.047469,
+    "lat": 35.306877,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2230.0
+  },
+  {
+    "name": "Órnio",
+    "lng": 24.046944,
+    "lat": 35.345693,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2151.0
+  },
+  {
+    "name": "Αφέντης Χριστός",
+    "lng": 25.4712,
+    "lat": 35.092796,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2141.0
+  },
+  {
+    "name": "Μαύρη Γουργούθα",
+    "lng": 24.022743,
+    "lat": 35.297197,
+    "type": "peak",
+    "rank": 4,
+    "ele": 2435.0
+  },
+  {
+    "name": "Afendis",
+    "lng": 25.399179,
+    "lat": 35.170209,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1578.0
+  },
+  {
+    "name": "Afentis",
+    "lng": 25.875912,
+    "lat": 35.080018,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1476.0
+  },
+  {
+    "name": "Agkathes",
+    "lng": 24.229881,
+    "lat": 35.269629,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1511.0
+  },
+  {
+    "name": "Agriomokefala",
+    "lng": 24.764983,
+    "lat": 35.251669,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1638.0
+  },
+  {
+    "name": "Avlionakos",
+    "lng": 23.989569,
+    "lat": 35.294527,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1835.0
+  },
+  {
+    "name": "Barsami",
+    "lng": 25.554759,
+    "lat": 35.171809,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1548.0
+  },
+  {
+    "name": "Choráfas Korfí",
+    "lng": 24.07427,
+    "lat": 35.27089,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1990.0
+  },
+  {
+    "name": "Damaki",
+    "lng": 24.858006,
+    "lat": 35.21802,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1570.0
+  },
+  {
+    "name": "Ekdora",
+    "lng": 24.790172,
+    "lat": 35.199724,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1965.0
+  },
+  {
+    "name": "Fourni",
+    "lng": 24.254217,
+    "lat": 35.294216,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1491.0
+  },
+  {
+    "name": "Ghourghoutha",
+    "lng": 23.871674,
+    "lat": 35.277183,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1675.0
+  },
+  {
+    "name": "Gingilos",
+    "lng": 23.918596,
+    "lat": 35.296247,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1974.0
+  },
+  {
+    "name": "Giristi",
+    "lng": 24.951896,
+    "lat": 35.180043,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1775.0
+  },
+  {
+    "name": "Katharo Tsivi",
+    "lng": 25.575856,
+    "lat": 35.180843,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1663.0
+  },
+  {
+    "name": "Kedrokefála",
+    "lng": 24.073165,
+    "lat": 35.261184,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1750.0
+  },
+  {
+    "name": "Kedros",
+    "lng": 24.617851,
+    "lat": 35.182549,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1777.0
+  },
+  {
+    "name": "Kochris",
+    "lng": 24.785115,
+    "lat": 35.257321,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1696.0
+  },
+  {
+    "name": "Kokinavari",
+    "lng": 23.926884,
+    "lat": 35.269806,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1694.0
+  },
+  {
+    "name": "Korifi Varsamou",
+    "lng": 24.086827,
+    "lat": 35.353032,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1550.0
+  },
+  {
+    "name": "Koudouni",
+    "lng": 24.935909,
+    "lat": 35.196361,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1857.0
+  },
+  {
+    "name": "Koukoule",
+    "lng": 23.927419,
+    "lat": 35.327463,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1629.0
+  },
+  {
+    "name": "Koures",
+    "lng": 24.634317,
+    "lat": 35.172105,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1506.0
+  },
+  {
+    "name": "Kourouna",
+    "lng": 24.797491,
+    "lat": 35.240577,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1850.0
+  },
+  {
+    "name": "Kouvara",
+    "lng": 23.925876,
+    "lat": 35.26471,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1608.0
+  },
+  {
+    "name": "Koútsakas",
+    "lng": 24.028895,
+    "lat": 35.257468,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1652.0
+  },
+  {
+    "name": "Mahera",
+    "lng": 25.557634,
+    "lat": 35.222448,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1487.0
+  },
+  {
+    "name": "Maliaropa",
+    "lng": 23.947837,
+    "lat": 35.343073,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1661.0
+  },
+  {
+    "name": "Malotyra",
+    "lng": 24.014592,
+    "lat": 35.349675,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1659.0
+  },
+  {
+    "name": "Mavri",
+    "lng": 23.961915,
+    "lat": 35.328334,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1883.0
+  },
+  {
+    "name": "Mires",
+    "lng": 24.872782,
+    "lat": 35.051817,
+    "type": "village",
+    "rank": 3
+  },
+  {
+    "name": "Moutsouna Toumpa",
+    "lng": 25.423523,
+    "lat": 35.15172,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1536.0
+  },
+  {
+    "name": "Mygia",
+    "lng": 24.73068,
+    "lat": 35.259589,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1584.0
+  },
+  {
+    "name": "Pano Vala",
+    "lng": 24.76996,
+    "lat": 35.269447,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1475.0
+  },
+  {
+    "name": "Perivolia",
+    "lng": 23.993337,
+    "lat": 35.484741,
+    "type": "village",
+    "rank": 3
+  },
+  {
+    "name": "Piperos",
+    "lng": 24.881586,
+    "lat": 35.204978,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1690.0
+  },
+  {
+    "name": "Plagokefala",
+    "lng": 25.559695,
+    "lat": 35.16339,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1475.0
+  },
+  {
+    "name": "Plataniás",
+    "lng": 23.910166,
+    "lat": 35.516889,
+    "type": "village",
+    "rank": 3
+  },
+  {
+    "name": "Psari",
+    "lng": 23.956144,
+    "lat": 35.321132,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1817.0
+  },
+  {
+    "name": "Psilafi",
+    "lng": 23.886265,
+    "lat": 35.29547,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1984.0
+  },
+  {
+    "name": "Psiristra",
+    "lng": 23.936564,
+    "lat": 35.276013,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1841.0
+  },
+  {
+    "name": "Psirístra",
+    "lng": 23.985146,
+    "lat": 35.277293,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1798.0
+  },
+  {
+    "name": "Sarakinou",
+    "lng": 25.406958,
+    "lat": 35.153544,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1586.0
+  },
+  {
+    "name": "Selena",
+    "lng": 25.511481,
+    "lat": 35.226591,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1559.0
+  },
+  {
+    "name": "Sitaras",
+    "lng": 24.75146,
+    "lat": 35.271802,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1579.0
+  },
+  {
+    "name": "Skinakas",
+    "lng": 24.894591,
+    "lat": 35.211461,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1752.0
+  },
+  {
+    "name": "Skoutsio",
+    "lng": 24.127289,
+    "lat": 35.287905,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1903.0
+  },
+  {
+    "name": "Soros",
+    "lng": 24.853118,
+    "lat": 35.178139,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1721.0
+  },
+  {
+    "name": "Strifomadi",
+    "lng": 23.89977,
+    "lat": 35.29476,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1921.0
+  },
+  {
+    "name": "Timbanatoras",
+    "lng": 24.848397,
+    "lat": 35.220046,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1577.0
+  },
+  {
+    "name": "Trytpith-Foulakas",
+    "lng": 24.744773,
+    "lat": 35.216851,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1581.0
+  },
+  {
+    "name": "Vasilies",
+    "lng": 25.136408,
+    "lat": 35.271508,
+    "type": "village",
+    "rank": 3
+  },
+  {
+    "name": "Vitsiles",
+    "lng": 24.008444,
+    "lat": 35.255546,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1530.0
+  },
+  {
+    "name": "Voreino",
+    "lng": 23.990256,
+    "lat": 35.288619,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1806.0
+  },
+  {
+    "name": "Μαύρος Κούμος",
+    "lng": 24.892268,
+    "lat": 35.193241,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1575.0
+  },
+  {
+    "name": "Χαλασοκεφάλα",
+    "lng": 24.877599,
+    "lat": 35.173765,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1900.0
+  },
+  {
+    "name": "Χαρκιάς",
+    "lng": 24.825642,
+    "lat": 35.224598,
+    "type": "peak",
+    "rank": 3,
+    "ele": 1630.0
+  },
+  {
+    "name": "Agia Fotia",
+    "lng": 25.876005,
+    "lat": 35.021973,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Agia Marina Beach",
+    "lng": 23.92505,
+    "lat": 35.519885,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Agia Pelagia Beach",
+    "lng": 25.018645,
+    "lat": 35.406129,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Agii Deka",
+    "lng": 24.961309,
+    "lat": 35.058929,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Agiofarango",
+    "lng": 24.778553,
+    "lat": 34.925434,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Agios Charalampos Beach",
+    "lng": 24.151063,
+    "lat": 35.192757,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Agios Ioannis nudist beach",
+    "lng": 24.083942,
+    "lat": 34.867619,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Ammofolos Beach",
+    "lng": 24.559094,
+    "lat": 35.106656,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Ammoudi",
+    "lng": 25.712772,
+    "lat": 35.198139,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Ammoudi Beach",
+    "lng": 24.420286,
+    "lat": 35.170815,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Analipsi",
+    "lng": 25.981282,
+    "lat": 35.03995,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Anatolika Beach",
+    "lng": 24.50024,
+    "lat": 35.148741,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Anidri Beach",
+    "lng": 23.722245,
+    "lat": 35.238773,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Argilos",
+    "lng": 26.231516,
+    "lat": 35.038589,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Argilos Beach",
+    "lng": 24.256288,
+    "lat": 35.180855,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Beach of Telonio",
+    "lng": 23.659458,
+    "lat": 35.498129,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Belegrina",
+    "lng": 25.722783,
+    "lat": 34.877276,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Chalepa Beach",
+    "lng": 24.04403,
+    "lat": 35.521569,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Charakas",
+    "lng": 25.120411,
+    "lat": 35.011006,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Chersonissos",
+    "lng": 25.372023,
+    "lat": 35.308168,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Chiona Beach",
+    "lng": 26.277264,
+    "lat": 35.197702,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Damnoni Beach",
+    "lng": 24.415313,
+    "lat": 35.174241,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Domata beach",
+    "lng": 23.913654,
+    "lat": 35.227056,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Dynonissos beach",
+    "lng": 24.480211,
+    "lat": 35.152711,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Eko Beach",
+    "lng": 24.638367,
+    "lat": 35.410321,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Elafonisi Beach",
+    "lng": 23.541386,
+    "lat": 35.271422,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Eligias",
+    "lng": 25.057012,
+    "lat": 34.941952,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Episkopi beach",
+    "lng": 24.341103,
+    "lat": 35.351155,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Falasarna beach",
+    "lng": 23.579842,
+    "lat": 35.492322,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Falassarna",
+    "lng": 23.576546,
+    "lat": 35.504408,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Filaki",
+    "lng": 24.157292,
+    "lat": 35.194148,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Finikia",
+    "lng": 25.107148,
+    "lat": 35.280362,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Finikidia Beach",
+    "lng": 24.564017,
+    "lat": 35.102779,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Fodele Beach",
+    "lng": 24.954514,
+    "lat": 35.402351,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Fotinari Beach",
+    "lng": 24.372741,
+    "lat": 35.192194,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Galia",
+    "lng": 24.870644,
+    "lat": 35.077635,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Georgioupolis Beach",
+    "lng": 24.28153,
+    "lat": 35.356201,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Gergeri",
+    "lng": 24.948723,
+    "lat": 35.132422,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Gerondolakkos beach",
+    "lng": 26.230803,
+    "lat": 35.037816,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Gialopotama Beach",
+    "lng": 24.505741,
+    "lat": 35.146479,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Golden Beach",
+    "lng": 23.989992,
+    "lat": 35.512541,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Gournes",
+    "lng": 25.0942,
+    "lat": 35.295744,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Gra Lygia",
+    "lng": 25.693092,
+    "lat": 35.015369,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Hohlakas",
+    "lng": 24.32662,
+    "lat": 35.189266,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kalamaki",
+    "lng": 23.968882,
+    "lat": 35.51357,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kalivaki Beach",
+    "lng": 24.260852,
+    "lat": 35.36688,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Karavostasi",
+    "lng": 25.726902,
+    "lat": 35.130107,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Karoumes",
+    "lng": 26.276684,
+    "lat": 35.146527,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Karterou",
+    "lng": 25.209141,
+    "lat": 35.332538,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kastelli",
+    "lng": 25.336658,
+    "lat": 35.209028,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Kato Archanes",
+    "lng": 25.169636,
+    "lat": 35.249812,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Katsouni nudist beach",
+    "lng": 24.525472,
+    "lat": 35.139382,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kavousi",
+    "lng": 25.859488,
+    "lat": 35.122016,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Kedrodasos",
+    "lng": 23.563541,
+    "lat": 35.268413,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kefala Beach",
+    "lng": 24.491084,
+    "lat": 35.150262,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kendrodasos",
+    "lng": 23.568512,
+    "lat": 35.266204,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kentri",
+    "lng": 25.752629,
+    "lat": 35.03299,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Kitroplatia",
+    "lng": 25.721054,
+    "lat": 35.18915,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Klima Beach",
+    "lng": 24.520838,
+    "lat": 35.143099,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Klimata",
+    "lng": 24.32004,
+    "lat": 35.188715,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kokkino Volakas",
+    "lng": 24.358278,
+    "lat": 35.187885,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kolimbari",
+    "lng": 23.779757,
+    "lat": 35.538896,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Kolokitha",
+    "lng": 25.751685,
+    "lat": 35.259899,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kommos Beach",
+    "lng": 24.759956,
+    "lat": 35.013885,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Korakas Beach",
+    "lng": 24.315413,
+    "lat": 35.18727,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Korfos",
+    "lng": 24.111421,
+    "lat": 34.830611,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Koudouma",
+    "lng": 25.085794,
+    "lat": 34.937849,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kouremenos",
+    "lng": 26.267508,
+    "lat": 35.211934,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Koutalas Beach",
+    "lng": 24.232187,
+    "lat": 35.466693,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Koutelos Beach",
+    "lng": 24.190331,
+    "lat": 35.199961,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Koutsounari",
+    "lng": 25.830999,
+    "lat": 35.017561,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Koutsouras",
+    "lng": 25.946903,
+    "lat": 35.033883,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Krassas beach",
+    "lng": 25.30857,
+    "lat": 34.983329,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Krios Beach",
+    "lng": 23.595446,
+    "lat": 35.236523,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Kritsa",
+    "lng": 25.646143,
+    "lat": 35.155763,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Lakki Beach",
+    "lng": 24.267994,
+    "lat": 35.180009,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Ligres Beach",
+    "lng": 24.533622,
+    "lat": 35.132163,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Lissos Beach",
+    "lng": 23.78724,
+    "lat": 35.240085,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Listis",
+    "lng": 25.354097,
+    "lat": 34.99009,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Livas",
+    "lng": 24.091769,
+    "lat": 34.867585,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Lygaria Beach",
+    "lng": 25.027308,
+    "lat": 35.399109,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Maherida Nudist Beach",
+    "lng": 24.076768,
+    "lat": 35.57354,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Makrigialos",
+    "lng": 25.972291,
+    "lat": 35.037159,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Marathitis",
+    "lng": 25.140929,
+    "lat": 35.285066,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Maridati Beach",
+    "lng": 26.273388,
+    "lat": 35.22152,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Marmara Beach",
+    "lng": 24.058095,
+    "lat": 35.196567,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Martsalo",
+    "lng": 24.770308,
+    "lat": 34.929999,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Mavros Molos",
+    "lng": 23.647356,
+    "lat": 35.500378,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Mazida Ammos beach",
+    "lng": 26.220663,
+    "lat": 35.036286,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Meatemaki Beach",
+    "lng": 24.061317,
+    "lat": 35.497125,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Melambes",
+    "lng": 24.653027,
+    "lat": 35.127151,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Melissa Sandhills",
+    "lng": 24.560479,
+    "lat": 35.102455,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Mikri Triopetra Beach",
+    "lng": 24.552741,
+    "lat": 35.115718,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Mikro Ammoudi Nudist Beach",
+    "lng": 24.418797,
+    "lat": 35.172537,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Mochos",
+    "lng": 25.422845,
+    "lat": 35.263633,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Mononaftis Beach",
+    "lng": 25.018765,
+    "lat": 35.416323,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Máleme Beach",
+    "lng": 23.849112,
+    "lat": 35.525777,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Nea Anatoli",
+    "lng": 25.661507,
+    "lat": 35.011762,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Onerock Beach",
+    "lng": 24.419068,
+    "lat": 35.17198,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Orthi Ammos",
+    "lng": 24.246084,
+    "lat": 35.183315,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Pachia Ammos",
+    "lng": 25.80557,
+    "lat": 35.109342,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Pachia Ammos",
+    "lng": 24.522846,
+    "lat": 35.141855,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Palaikastro",
+    "lng": 26.254175,
+    "lat": 35.197578,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Paligremnos Beach (Nudist)",
+    "lng": 24.400718,
+    "lat": 35.18088,
+    "type": "beach",
+    "rank": 2
+  },
+  {
+    "name": "Petrokefali",
+    "lng": 24.834631,
+    "lat": 35.028676,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Piskokefalo",
+    "lng": 26.096406,
+    "lat": 35.178484,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Pithari",
+    "lng": 24.086284,
+    "lat": 35.517122,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Pitsidia",
+    "lng": 24.780795,
+    "lat": 35.016154,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Pombia",
+    "lng": 24.86838,
+    "lat": 35.008918,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Pyrgos",
+    "lng": 25.15515,
+    "lat": 35.008435,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Roussospiti",
+    "lng": 24.494448,
+    "lat": 35.334069,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Schisma Eloundas",
+    "lng": 25.720862,
+    "lat": 35.261883,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Sisi",
+    "lng": 25.525713,
+    "lat": 35.304183,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Skopi",
+    "lng": 26.038481,
+    "lat": 35.17833,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Stalida",
+    "lng": 25.429442,
+    "lat": 35.293943,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Thrapsano",
+    "lng": 25.280825,
+    "lat": 35.187326,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Tzermiado",
+    "lng": 25.489015,
+    "lat": 35.198634,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Vainia",
+    "lng": 25.772102,
+    "lat": 35.024936,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Vori",
+    "lng": 24.810945,
+    "lat": 35.067673,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Zakros",
+    "lng": 26.218003,
+    "lat": 35.113119,
+    "type": "village",
+    "rank": 2
+  },
+  {
+    "name": "Agios Georgios",
+    "lng": 25.483886,
+    "lat": 35.166563,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Argyroupoli",
+    "lng": 24.33483,
+    "lat": 35.285366,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Avdou",
+    "lng": 25.431748,
+    "lat": 35.232044,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Episkopi",
+    "lng": 25.794248,
+    "lat": 35.057414,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Faneromeni",
+    "lng": 24.82899,
+    "lat": 35.073802,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Gagales",
+    "lng": 25.010614,
+    "lat": 35.059361,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Georgioupoli",
+    "lng": 24.261377,
+    "lat": 35.361922,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Gerakari",
+    "lng": 24.609246,
+    "lat": 35.214218,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Gonies",
+    "lng": 25.441627,
+    "lat": 35.230277,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Kalamafka",
+    "lng": 25.656788,
+    "lat": 35.07516,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Kalo Chorio",
+    "lng": 25.724544,
+    "lat": 35.115589,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Kamare",
+    "lng": 24.819059,
+    "lat": 35.153006,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Kamilari",
+    "lng": 24.789919,
+    "lat": 35.033595,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Kato Chorio",
+    "lng": 25.790092,
+    "lat": 35.048808,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Kokkinos Pyrgos",
+    "lng": 24.738805,
+    "lat": 35.084135,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Koutouloufari",
+    "lng": 25.392514,
+    "lat": 35.306555,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Koxare",
+    "lng": 24.467454,
+    "lat": 35.225784,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Kroustas",
+    "lng": 25.660096,
+    "lat": 35.13984,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Lefkogia",
+    "lng": 24.443693,
+    "lat": 35.178202,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Limnes",
+    "lng": 25.638007,
+    "lat": 35.2477,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Lithines",
+    "lng": 26.045948,
+    "lat": 35.074433,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Males",
+    "lng": 25.584832,
+    "lat": 35.080544,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Mirtos",
+    "lng": 25.583742,
+    "lat": 35.004034,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Mithi",
+    "lng": 25.574339,
+    "lat": 35.038841,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Mitropoli",
+    "lng": 24.944205,
+    "lat": 35.056214,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Patsides",
+    "lng": 25.181742,
+    "lat": 35.268065,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Plakias",
+    "lng": 24.39545,
+    "lat": 35.191535,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Potamies",
+    "lng": 25.387948,
+    "lat": 35.255826,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Rodopos",
+    "lng": 23.755336,
+    "lat": 35.561805,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Sellia",
+    "lng": 24.380951,
+    "lat": 35.205114,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Sivas",
+    "lng": 24.807655,
+    "lat": 35.018254,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Skourvoula",
+    "lng": 24.844468,
+    "lat": 35.107249,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Vorizia",
+    "lng": 24.847087,
+    "lat": 35.150287,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Voulismeni",
+    "lng": 25.589958,
+    "lat": 35.260926,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Vrachasi",
+    "lng": 25.564117,
+    "lat": 35.273035,
+    "type": "village",
+    "rank": 1
+  },
+  {
+    "name": "Ziros",
+    "lng": 26.139509,
+    "lat": 35.075308,
+    "type": "village",
+    "rank": 1
+  }
+]

@@ -8,3 +8,7 @@ shots/*
 !shots/phase-*/**
 *.log
 .claude/
+
+# gavdos data (rebuild: bunx tsx tools/gavdos/build-data.ts --stage=all)
+public/gavdos/*.bin
+public/gavdos/*.jpg

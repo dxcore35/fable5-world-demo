@@ -1,0 +1,25 @@
+{
+  "width": 2048,
+  "height": 1664,
+  "bounds": {
+    "west": 23.9,
+    "south": 34.76,
+    "east": 24.2,
+    "north": 34.96
+  },
+  "classes": {
+    "0": "sea",
+    "1": "scrub",
+    "2": "trees",
+    "3": "sand",
+    "4": "rock"
+  },
+  "histogram": {
+    "0": 3208823,
+    "1": 116197,
+    "2": 59172,
+    "3": 6992,
+    "4": 16688
+  },
+  "sources": "ESA WorldCover 2021 + Sentinel-2 NDVI + Hellenic Cadastre ortho + DEM slope"
+}

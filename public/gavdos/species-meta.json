@@ -1,0 +1,25 @@
+{
+  "width": 2048,
+  "height": 1664,
+  "bounds": {
+    "west": 23.9,
+    "south": 34.76,
+    "east": 24.2,
+    "north": 34.96
+  },
+  "codes": {
+    "0": "none",
+    "1": "juniper",
+    "2": "pine",
+    "3": "olive",
+    "4": "phrygana"
+  },
+  "histogram": {
+    "0_none": 3231488,
+    "1_juniper": 14577,
+    "2_pine": 44092,
+    "3_olive": 10285,
+    "4_phrygana": 107430
+  },
+  "derivation": "surface-class mask + ESA WorldCover + Sentinel-2 NDVI + Cadastre ortho brightness + DEM elevation + coast distance"
+}

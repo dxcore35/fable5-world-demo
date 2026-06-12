@@ -1,0 +1,21 @@
+{
+  "width": 2048,
+  "height": 1664,
+  "bounds": {
+    "west": 23.9,
+    "south": 34.76,
+    "east": 24.2,
+    "north": 34.96
+  },
+  "minElevation": -1633.760009765625,
+  "maxElevation": 367.94403076171875,
+  "highestLand": 367.94403076171875,
+  "deepestSea": -1633.760009765625,
+  "sources": {
+    "land": "FABDEM V1-2 (CC BY-NC-SA) bare-earth 30 m",
+    "seabed_deep": "GMRT GridServer (GEBCO 2024 + multibeam + SRTM)",
+    "seabed_shallow": "SDB Stumpf band-ratio, S2A_34SGD_20260531_1_L2A",
+    "layout": "Hellenic Cadastre LSO_v2 orthophoto (permission granted)"
+  },
+  "notes": "Coastal band (-6..+8 m) smoothed for clean beach-water connection."
+}
