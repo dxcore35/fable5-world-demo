@@ -108,6 +108,10 @@ const OVERPASS_QUERY = `[out:json][timeout:90];
   way["barrier"~"wall|fence"](${OVP_SOUTH},${OVP_WEST},${OVP_NORTH},${OVP_EAST});
   way["landuse"](${OVP_SOUTH},${OVP_WEST},${OVP_NORTH},${OVP_EAST});
   node["amenity"](${OVP_SOUTH},${OVP_WEST},${OVP_NORTH},${OVP_EAST});
+  node["place"](${OVP_SOUTH},${OVP_WEST},${OVP_NORTH},${OVP_EAST});
+  node["tourism"](${OVP_SOUTH},${OVP_WEST},${OVP_NORTH},${OVP_EAST});
+  node["natural"="beach"](${OVP_SOUTH},${OVP_WEST},${OVP_NORTH},${OVP_EAST});
+  node["man_made"="lighthouse"](${OVP_SOUTH},${OVP_WEST},${OVP_NORTH},${OVP_EAST});
 );
 out geom;`;
 
@@ -258,8 +262,9 @@ async function stageVectors(): Promise<void> {
 
   for (const el of elements) {
     if (el.type === "node") {
-      if (el.tags?.amenity) {
-        pois.push({ id: el.id, lon: el.lon, lat: el.lat, tags: el.tags ?? {} });
+      const t = el.tags ?? {};
+      if (t.amenity || t.place || t.tourism || t.natural === "beach" || t.man_made === "lighthouse") {
+        pois.push({ id: el.id, lon: el.lon, lat: el.lat, tags: t });
       }
     } else if (el.type === "way") {
       const geom = el.geometry ?? [];

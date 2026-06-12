@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-12T18:33:39.585Z",
+  "generated": "2026-06-12T18:41:17.334Z",
   "bbox": {
     "west": 24,
     "south": 34.78,
@@ -34445,6 +34445,63 @@
   ],
   "pois": [
     {
+      "id": 715162082,
+      "lon": 24.0847728,
+      "lat": 34.8349889,
+      "tags": {
+        "int_name": "Kastri",
+        "name": "Καστρί",
+        "name:de": "Kastri",
+        "name:el": "Καστρί",
+        "name:en": "Kastri",
+        "name:ru": "Кастри",
+        "place": "hamlet"
+      }
+    },
+    {
+      "id": 1450692304,
+      "lon": 24.118291,
+      "lat": 34.8486838,
+      "tags": {
+        "int_name": "Karave",
+        "name": "Καραβές",
+        "name:de": "Karave",
+        "name:el": "Καραβές",
+        "name:en": "Karaves",
+        "name:ru": "Караве",
+        "place": "hamlet"
+      }
+    },
+    {
+      "id": 1450692306,
+      "lon": 24.0554141,
+      "lat": 34.8445763,
+      "tags": {
+        "int_name": "Ambelos",
+        "name": "Άμπελος",
+        "name:el": "Άμπελος",
+        "name:en": "Ambelos",
+        "name:ru": "Амбелос",
+        "place": "hamlet"
+      }
+    },
+    {
+      "id": 1450692307,
+      "lon": 24.0985853,
+      "lat": 34.8212352,
+      "tags": {
+        "int_name": "Vatsiana",
+        "name": "Βατσιανά",
+        "name:de": "Vatsiania",
+        "name:el": "Βατσιανά",
+        "name:en": "Vatsiana",
+        "name:ru": "Ватсиана",
+        "place": "hamlet",
+        "wikidata": "Q7917179",
+        "wikipedia": "en:Vatsiana"
+      }
+    },
+    {
       "id": 1947271649,
       "lon": 24.1107479,
       "lat": 34.8586351,
@@ -34452,6 +34509,22 @@
         "addr:city": "Γαύδος",
         "amenity": "restaurant",
         "name": "Νυχτερίδα"
+      }
+    },
+    {
+      "id": 1947271654,
+      "lon": 24.1100828,
+      "lat": 34.8593834,
+      "tags": {
+        "tourism": "camp_site"
+      }
+    },
+    {
+      "id": 1947271661,
+      "lon": 24.1091392,
+      "lat": 34.8587667,
+      "tags": {
+        "tourism": "guest_house"
       }
     },
     {
@@ -34463,6 +34536,57 @@
       }
     },
     {
+      "id": 1947340640,
+      "lon": 24.1108069,
+      "lat": 34.8310396,
+      "tags": {
+        "name": "Κόρφος",
+        "name:de": "Korfos",
+        "name:el": "Κόρφος",
+        "name:en": "Korfos",
+        "name:ru": "Корфос",
+        "place": "hamlet"
+      }
+    },
+    {
+      "id": 1947340986,
+      "lon": 24.1221246,
+      "lat": 34.8010564,
+      "tags": {
+        "alt_name": "The southernmost Point of Europe",
+        "description:de": "Südlichster Aussichtspunkt des europäischen Kontinents (incl. Inseln); die Lehne weist nach Süden",
+        "historic": "memorial",
+        "inscription": "The southernmost Point of Europe",
+        "memorial": "plaque",
+        "name": "Η Καρέκλα",
+        "name:de": "Der Stuhl",
+        "name:el": "Η Καρέκλα",
+        "name:en": "The Chair",
+        "tourism": "attraction"
+      }
+    },
+    {
+      "id": 1947340989,
+      "lon": 24.1109151,
+      "lat": 34.8580746,
+      "tags": {
+        "name": "Σαρακίνικο",
+        "name:de": "Sarakiniko",
+        "name:el": "Σαρακίνικο",
+        "name:en": "Sarakiniko",
+        "name:ru": "Саракинико",
+        "place": "hamlet"
+      }
+    },
+    {
+      "id": 1947348961,
+      "lon": 24.0952072,
+      "lat": 34.8172847,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
       "id": 1947370863,
       "lon": 24.1187795,
       "lat": 34.8482418,
@@ -34470,6 +34594,32 @@
         "amenity": "ferry_terminal",
         "ferry": "yes",
         "public_transport": "station"
+      }
+    },
+    {
+      "id": 1947905251,
+      "lon": 24.1105604,
+      "lat": 34.8319468,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "id": 1947905256,
+      "lon": 24.0863373,
+      "lat": 34.8227082,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "id": 1960196676,
+      "lon": 24.1186901,
+      "lat": 34.8469856,
+      "tags": {
+        "man_made": "lighthouse",
+        "name": "Green",
+        "seamark:type": "light_major"
       }
     },
     {
@@ -34495,6 +34645,24 @@
       "lat": 34.8568834,
       "tags": {
         "amenity": "drinking_water"
+      }
+    },
+    {
+      "id": 5787718053,
+      "lon": 24.1149918,
+      "lat": 34.8206033,
+      "tags": {
+        "name": "View Point",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "id": 5935093260,
+      "lon": 24.0586845,
+      "lat": 34.8389701,
+      "tags": {
+        "man_made": "lighthouse",
+        "seamark:type": "light_major"
       }
     },
     {
@@ -34538,6 +34706,15 @@
       }
     },
     {
+      "id": 5935897815,
+      "lon": 24.0922187,
+      "lat": 34.8652807,
+      "tags": {
+        "name": "Sofia Rooms",
+        "tourism": "guest_house"
+      }
+    },
+    {
       "id": 5935925120,
       "lon": 24.0863485,
       "lat": 34.8347918,
@@ -34566,6 +34743,16 @@
         "denomination": "orthodox",
         "name": "Άγιος Παντελεήμων",
         "religion": "christian"
+      }
+    },
+    {
+      "id": 5938473012,
+      "lon": 24.1151239,
+      "lat": 34.8105296,
+      "tags": {
+        "alt_name": "Pateridon",
+        "name": "Aliki",
+        "place": "locality"
       }
     },
     {
@@ -34621,6 +34808,25 @@
       }
     },
     {
+      "id": 6325697098,
+      "lon": 24.106061,
+      "lat": 34.8648198,
+      "tags": {
+        "name": "Fokia",
+        "place": "locality"
+      }
+    },
+    {
+      "id": 6325732096,
+      "lon": 24.1031818,
+      "lat": 34.8661136,
+      "tags": {
+        "name": "Fokia",
+        "name:ru": "Фокиа",
+        "place": "hamlet"
+      }
+    },
+    {
       "id": 6533255286,
       "lon": 24.110388,
       "lat": 34.8319943,
@@ -34672,6 +34878,59 @@
       }
     },
     {
+      "id": 7847478226,
+      "lon": 24.1074291,
+      "lat": 34.8348783,
+      "tags": {
+        "description": "Map of Gavdos",
+        "hiking": "yes",
+        "information": "map",
+        "map_size": "city",
+        "map_type": "topo",
+        "tourism": "information"
+      }
+    },
+    {
+      "id": 7847478510,
+      "lon": 24.1009422,
+      "lat": 34.8323294,
+      "tags": {
+        "addr:city": "Γαύδος",
+        "addr:hamlet": "Σγουδιανά",
+        "addr:postcode": "73001",
+        "name": "Μετόχι",
+        "name:el": "Μετόχι",
+        "name:en": "Metochi Gavdos",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "id": 7847611429,
+      "lon": 24.085156,
+      "lat": 34.8502756,
+      "tags": {
+        "description": "Map of Gavdos",
+        "hiking": "yes",
+        "information": "map",
+        "map_size": "city",
+        "map_type": "topo",
+        "tourism": "information"
+      }
+    },
+    {
+      "id": 7847611532,
+      "lon": 24.0900946,
+      "lat": 34.8382378,
+      "tags": {
+        "description": "Map of Gavdos",
+        "hiking": "yes",
+        "information": "map",
+        "map_size": "city",
+        "map_type": "topo",
+        "tourism": "information"
+      }
+    },
+    {
       "id": 7851211163,
       "lon": 24.1091631,
       "lat": 34.8591491,
@@ -34680,11 +34939,79 @@
       }
     },
     {
+      "id": 7851323843,
+      "lon": 24.110572,
+      "lat": 34.8578445,
+      "tags": {
+        "description": "Map of Gavdos",
+        "hiking": "yes",
+        "information": "map",
+        "map_size": "city",
+        "map_type": "topo",
+        "tourism": "information"
+      }
+    },
+    {
       "id": 7851323844,
       "lon": 24.110578,
       "lat": 34.8577603,
       "tags": {
         "amenity": "shelter"
+      }
+    },
+    {
+      "id": 7851324120,
+      "lon": 24.1083471,
+      "lat": 34.8514593,
+      "tags": {
+        "description": "Map of Gavdos",
+        "hiking": "yes",
+        "information": "map",
+        "map_size": "city",
+        "map_type": "topo",
+        "tourism": "information"
+      }
+    },
+    {
+      "id": 7921410025,
+      "lon": 24.1221461,
+      "lat": 34.8009046,
+      "tags": {
+        "name": "Το νοτιότερο σημείο της Ευρώπης",
+        "name:el": "Το νοτιότερο σημείο της Ευρώπης",
+        "name:en": "Southernmost point of Europe",
+        "name:fr": "Point extrême de l'Europe le plus au sud",
+        "tourism": "attraction",
+        "wikidata": "Q2344897",
+        "wikipedia": "en:Extreme points of Europe"
+      }
+    },
+    {
+      "id": 9047209817,
+      "lon": 24.1161547,
+      "lat": 34.8047802,
+      "tags": {
+        "name:en": "Diana’s beach",
+        "name:it": "spiaggia Diana",
+        "tourism": "attraction"
+      }
+    },
+    {
+      "id": 9397123611,
+      "lon": 24.1064397,
+      "lat": 34.8613645,
+      "tags": {
+        "name": "Σπίτι των εξόριστων-Σπίτι του Άρη Βελουχιώτη",
+        "tourism": "attraction"
+      }
+    },
+    {
+      "id": 9397193812,
+      "lon": 24.119825,
+      "lat": 34.8479214,
+      "tags": {
+        "name": "Σταθμός βαθμονόμησης δορυφόρων αλτιμετρίας Γαύδου",
+        "tourism": "attraction"
       }
     },
     {
@@ -34836,6 +35163,60 @@
         "takeaway": "yes",
         "toilets:access": "yes",
         "wheelchair": "limited"
+      }
+    },
+    {
+      "id": 12182137907,
+      "lon": 24.0629156,
+      "lat": 34.8595503,
+      "tags": {
+        "name": "Ποταμός",
+        "natural": "beach"
+      }
+    },
+    {
+      "id": 12182137908,
+      "lon": 24.0660517,
+      "lat": 34.866843,
+      "tags": {
+        "name": "Πύργος",
+        "natural": "beach"
+      }
+    },
+    {
+      "id": 12182137909,
+      "lon": 24.0722745,
+      "lat": 34.8707162,
+      "tags": {
+        "name": "Λαβρακάς",
+        "natural": "beach"
+      }
+    },
+    {
+      "id": 12182137910,
+      "lon": 24.084677,
+      "lat": 34.8676177,
+      "tags": {
+        "name": "Αγ. Γιάννης",
+        "natural": "beach"
+      }
+    },
+    {
+      "id": 12182137911,
+      "lon": 24.1235976,
+      "lat": 34.8044668,
+      "tags": {
+        "name": "Τρυπητή",
+        "natural": "beach"
+      }
+    },
+    {
+      "id": 12182137912,
+      "lon": 24.1238551,
+      "lat": 34.8160065,
+      "tags": {
+        "name": "Λακκούδι",
+        "natural": "beach"
       }
     },
     {
