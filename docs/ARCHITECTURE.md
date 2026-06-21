@@ -36,7 +36,7 @@ downstream code branches.
 
 Verified facts: Three.js `0.184.0`, `@types/three ^0.184.1`, TypeScript `^5.7.0`, Vite `^6.0.0`,
 `meshoptimizer 1.1.1`, `geotiff ^3.0.5`, `proj4 ^2.20.9`, `sharp ^0.34.0`, `playwright ^1.50.0`,
-`tsx ^4.19.0` (from `package.json`). Source tree is ~28,000 lines of strict TS across 93 files.
+`tsx ^4.19.0` (from `package.json`). Source tree is ~28,000 lines of strict TS across 97 files.
 
 ---
 
@@ -115,7 +115,7 @@ bun tools/gavdos/verify-world.ts       # full PASS/FAIL render battery
 | Path | Role |
 |------|------|
 | `index.html` | Single page: `#app` canvas container + `#boot` overlay; loads `/src/main.ts`. |
-| `src/` | All engine + world source (TypeScript strict, ~28k lines, 93 files). |
+| `src/` | All engine + world source (TypeScript strict, ~28k lines, 97 files). |
 | `tools/` | Headless verification harness + offline bake/fetch pipeline (~7.3k lines). |
 | `public/crete/` | Pre-baked Crete assets: `heightmap.bin`, coastlines, `canopy-mask.bin`, `sat-tiles/`, `meshlets/`, `*.json`. |
 | `public/gavdos/` | Pre-baked Gavdos assets: `heightmap.bin`, `mask.bin`, `species.bin`, `weights.bin`, `roadmask.png`, `vectors.json`, etc. |
@@ -1158,7 +1158,9 @@ Caustics sample baked `NoiseBake` StorageTextures. `VegInstance` reads scatter S
 Cloud march half-res quarters the ray count. Terrain noise replaced ~35 live evals (~52 ms) with ~14
 filtered NoiseBake fetches. `CachedCsmShadowNode` re-renders cascade i every `PERIODS[i]∈[1,2,4,10]`
 frames staggered by `PHASES` (was ~13–19 ms/frame at heavy bookmarks). Per-cascade map sizes
-`[2048,2048,1024,512]`. Depth prepass for high-overdraw veg renders full lighting once per visible
+default to `[2048,2048,1024,512]` (laas/gavdos, `ShadowSetup.ts:134`); Crete overrides the second
+cascade down to `[2048,1536,1024,512]` (`TerrainScene.ts:535`) to claw back frame time on its 280 km
+frustum. Depth prepass for high-overdraw veg renders full lighting once per visible
 pixel. Auto-exposure is GPU-only (12×12 log-average compute → 2-float storage buffer, no readback).
 SSCS reduced 12→8 steps; PCSS 4 blocker + 5 PCF taps; caustics baked at 256². Distance-gated detail
 throughout (meso/micro bumps <140 m, beach flecks fade 420→90 m, far-detail ridged-normal ramps
@@ -1845,7 +1847,7 @@ cluster-LOD renderer.
 | **impostor** | A flat billboard textured with a pre-rendered view of a 3D object (here, an **octahedral** impostor atlas: tiles for many viewing directions, hemi-oct tile select + bilinear 4-tile blend), used for distant vegetation crowns to replace real geometry. |
 | **hero / impostor LOD** | The two ends of vegetation LOD: **hero** = full instanced 3D geometry up close; **impostor** = the octahedral billboard far away. `Forests` dithers the handoff across a discrete distance ring. |
 | **froxel** | "Frustum voxel" — a cell of the camera-frustum-aligned volumetric grid (160×90×64) rebuilt every frame for light shafts + valley fog, integrated front-to-back, composited in post before aerial perspective. Exponential slices NEAR=2 m → FAR=480 m. |
-| **CSM** | Cascaded Shadow Maps — a 4-cascade directional-shadow rig with PCSS contact-hardening. `CachedCsmShadowNode` caches each cascade on a `[1,2,4,10]`-frame cadence; per-cascade map sizes `[2048,2048,1024,512]`. |
+| **CSM** | Cascaded Shadow Maps — a 4-cascade directional-shadow rig with PCSS contact-hardening. `CachedCsmShadowNode` caches each cascade on a `[1,2,4,10]`-frame cadence; per-cascade map sizes default to `[2048,2048,1024,512]` (laas/gavdos, `ShadowSetup.ts:134`), with Crete overriding the second cascade to `[2048,1536,1024,512]` (`TerrainScene.ts:535`). |
 | **PCSS** | Percentage-Closer Soft Shadows — the shadow filter (blocker search → world-metric penumbra → Vogel-disk PCF) that gives contact-hardening soft shadow edges. |
 | **SSCS** | Screen-Space Contact Shadows — an 8-step depth march toward the sun (<280 m) that adds fine contact shadows below the CSM's resolution. |
 | **GTAO** | Ground-Truth Ambient Occlusion — a horizon-based AO method (here 8 samples / 1.6 m radius, half-res in the merged MRT, joint-bilateral upsampled). |
