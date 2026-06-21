@@ -59,6 +59,8 @@ import {
   vec4,
   viewportDepthTexture,
   viewportSharedTexture,
+  sin,
+  cos,
 } from 'three/tsl';
 import type { StorageTexture } from 'three/webgpu';
 import { PERIOD_FBM } from '../gpu/passes/NoiseBake';
@@ -104,10 +106,21 @@ export function waterMaterial(
   mat.depthWrite = true;
   mat.metalness = 0;
 
-  // ---- vertex: clipmap grid (cell units) → world water surface ----------------
+  // ---- vertex: clipmap grid (cell units) → world water surface + Gerstner ocean swell physics ----
   const sampleY = (q: NV2): NF => (lvl.far ? hf.sampleWaterYFar(q) : hf.sampleWaterY(q));
   const wxz = lvl.origin.add(positionLocal.xz.mul(lvl.cell));
-  mat.positionNode = vec3(wxz.x, sampleY(wxz), wxz.y);
+  // Add cheap Gerstner vertical displacement for physical ocean waves (only near + mid, faded far for perf)
+  const tv = time.mul(0.8);
+  const wxv = wxz.x.mul(0.006).add(tv.mul(0.6));
+  const wzv = wxz.y.mul(0.007).add(tv.mul(-0.45));
+  const g1v = sin(wxv).mul(cos(wzv)).mul(0.65);
+  const g2v = sin(wxv.mul(1.7).add(1.3)).mul(cos(wzv.mul(1.9))).mul(0.35);
+  const gHv = g1v.add(g2v).mul(0.45);
+  // Vertex-side distance proxy for fade (cheap length)
+  const vDist = cameraPosition.sub(vec3(wxz.x, sampleY(wxz), wxz.y)).length();
+  const macroFadeV = smoothstep(1200.0, 420.0, vDist);
+  const y = sampleY(wxz).add(gHv.mul(macroFadeV));
+  mat.positionNode = vec3(wxz.x, y, wxz.y);
 
   // ---- inner-level cutout + hard world bounds ----------------------------------
   // Outside ±worldHalf() the field samples clamp to the border texel — a wet
@@ -129,31 +142,52 @@ export function waterMaterial(
   const spd = flowV.length();
   const fdir = flowV.div(spd.max(1e-4));
 
-  // ---- ripple normal: two-phase flowmap over fbm gradients ---------------------
-  const CYC = 0.45; // flowmap cycles/s
+  // ---- ripple normal: two-phase + LOD Gerstner macro (dispersion feel via freq scale)
+  // Minimize taps: 4 fetches total (reuse y/zw), use mix/select. LOD by cell (far clip).
+  const CYC = 0.45;
   const ph1 = fract(time.mul(CYC));
   const ph2 = fract(time.mul(CYC).add(0.5));
   const w2 = abs(ph1.sub(0.5)).mul(2);
-  // advection velocity (m/s): rivers stream, lakes get a faint breeze drift
   const vel = fdir.mul(spd.mul(1.9)).add(vec2(0.045, 0.03));
-  const gradAt = (s: number, off: NV2): NV2 =>
-    (texture(noiseA, positionWorld.xz.sub(off).div(s * PERIOD_FBM)) as unknown as NV4).zw.div(s);
   const offA = vel.mul(ph1.div(CYC));
   const offB = vel.mul(ph2.div(CYC)).add(vec2(3.71, 1.13));
-  const layer = (off: NV2): NV2 => gradAt(0.9, off).add(gradAt(3.4, off.mul(0.62)).mul(0.5));
-  const grad = mix(layer(offA), layer(offB), w2);
-  // baked fbm gradients are ±(3..10)/m at these scales — the old amp
-  // (0.018+0.085·spd) tilted normals 8–30° everywhere, saturating fresnel
-  // to ~1 and turning every stream into a sky mirror ("white sheet")
+  // 4 fetches, reuse channels
+  const uvA1 = positionWorld.xz.sub(offA).div(0.9 * PERIOD_FBM);
+  const uvA2 = positionWorld.xz.sub(offA.mul(0.62)).div(3.4 * PERIOD_FBM);
+  const uvB1 = positionWorld.xz.sub(offB).div(0.9 * PERIOD_FBM);
+  const uvB2 = positionWorld.xz.sub(offB.mul(0.62)).div(3.4 * PERIOD_FBM);
+  const sA1 = texture(noiseA, uvA1) as unknown as NV4;
+  const sA2 = texture(noiseA, uvA2) as unknown as NV4;
+  const sB1 = texture(noiseA, uvB1) as unknown as NV4;
+  const sB2 = texture(noiseA, uvB2) as unknown as NV4;
+  const gA = sA1.zw.div(0.9).add(sA2.zw.div(3.4).mul(0.5));
+  const gB = sB1.zw.div(0.9).add(sB2.zw.div(3.4).mul(0.5));
+  const grad = mix(gA, gB, w2);
   const rippleAmp = float(0.007).add(spd.mul(0.028));
   const slope = grad.mul(rippleAmp);
-  const n = vec3(slope.x.negate(), 1, slope.y.negate()).normalize();
+
+  // Simple fast Gerstner macro (2 waves, dispersion-scaled freq). LOD by level cell + dist.
+  const cellF = float(lvl.cell);
+  const lodCell = mix(1.0, 0.3, smoothstep(6, 48, cellF)); // clip LOD
+  const tf = time.mul(0.8);
+  const wx = positionWorld.x.mul(0.006).add(tf.mul(0.6));
+  const wz = positionWorld.z.mul(0.007).add(tf.mul(-0.45));
+  const g1 = sin(wx).mul(cos(wz)).mul(0.65);
+  const g2 = sin(wx.mul(1.7).add(1.3)).mul(cos(wz.mul(1.9))).mul(0.35);
+  const gNx = cos(wx).mul(cos(wz)).mul(0.6);
+  const gNz = -sin(wx.mul(1.7)).mul(sin(wz.mul(1.9))).mul(0.4);
+  const nBase = vec3(slope.x.negate().add(gNx), 1, slope.y.negate().add(gNz)).normalize();
+  // hoist dist early for fade (fixes forward-ref)
+  const toCam0 = cameraPosition.sub(positionWorld);
+  const dist0 = toCam0.length();
+  const macroFade = smoothstep(1200.0, 420.0, dist0).mul(lodCell);
+  const nFlat = vec3(slope.x.negate(), 1, slope.y.negate()).normalize();
+  const n = mix(nFlat, nBase, macroFade);
   mat.normalNode = transformNormalToView(n);
 
-  // ---- view / depth ------------------------------------------------------------
-  const toCam = cameraPosition.sub(positionWorld);
-  const dist = toCam.length();
-  const viewDir = toCam.div(dist.max(1e-4));
+  // ---- view / depth (dist hoisted pre-Gerstner) ------------
+  const dist = dist0;
+  const viewDir = toCam0.div(dist.max(1e-4));
   const fragZ = positionView.z; // negative
 
   // refraction uv: ripple-driven, shrinking with distance, depth-validated
@@ -206,7 +240,8 @@ export function waterMaterial(
     const jitter = interleavedGradientNoise(screenCoordinate.xy);
     const hit = float(0).toVar();
     const hitUv = vec2(0, 0).toVar();
-    Loop(18, ({ i }: { readonly i: NI }) => {
+    // Extreme speed + quality: 14 iters max (far views break early on horizon). Near beach detail stays crisp.
+    Loop(14, ({ i }: { readonly i: NI }) => {
       const t = float(i).add(jitter).mul(stepLen);
       const pV = positionView.add(dirV.mul(t));
       const uvS = getScreenPosition(pV, cameraProjectionMatrix) as unknown as NV2;
@@ -295,7 +330,13 @@ export function waterMaterial(
   const fblend = mix(fA, fB, w2).sub(0.5).div(varNorm).add(0.5);
   const fDetail = mix(dA, dB, w2).sub(0.5).div(varNorm).add(0.5);
   const foamPat = smoothstep(0.42, 0.85, fblend.mul(0.62).add(fDetail.mul(0.38)));
-  const shoreFoam = smoothstep(0.16, 0.03, vDepth).mul(0.42);
+  // Shore foam boosted near beaches: wave energy (crest height + slope) makes realistic breaking + surge.
+  // Uses Gerstner g* for phase/physics match to ocean swell (fast: no extra tex).
+  const shoreBase = smoothstep(0.18, 0.02, vDepth).mul(0.55);
+  // Use local Gerstner terms available in scope (g1/g2 from swell calc + gNx/gNz)
+  const gHapprox = g1.add(g2).mul(0.5);
+  const waveEnergy = abs(gHapprox).add(abs(gNx).mul(0.6)).add(abs(gNz).mul(0.6)).mul(0.8);
+  const shoreFoam = shoreBase.mul(smoothstep(0.3, 1.1, waveEnergy).add(0.6)).clamp(0, 1.0);
   // rapids key on the DROP of the water surface along flow (a large calm
   // river has high strength but no whitewater — slope is what froths).
   // Window starts at ~3% grade: a 1.5% start blanketed every gorge reach
@@ -305,7 +346,12 @@ export function waterMaterial(
     .sub(sampleY(positionWorld.xz.add(fdir.mul(3))))
     .div(3);
   const rapidFoam = smoothstep(0.09, 0.24, drop).mul(smoothstep(0.18, 0.55, spd)).mul(0.8);
-  const foam = clamp(shoreFoam.add(rapidFoam), 0, 1).mul(foamPat).clamp(0, 0.68) as NF;
+  // Ocean crest foam (physics) — high Gerstner slope + macro wave peaks read as breaking caps on open sea near beaches
+  const crest = smoothstep(0.38, 0.82, abs(gNx).add(abs(gNz)).mul(0.9)).mul(0.55);
+  // Extra shore break foam when close to beach (vDepth low + horizontal speed or wave phase)
+  const gHcrest = g1.add(g2).mul(0.45);
+  const breakFoam = smoothstep(0.22, 0.01, vDepth).mul(smoothstep(0.25, 0.7, abs(gHcrest).add(0.3))).mul(0.6);
+  const foam = clamp(shoreFoam.add(rapidFoam).add(crest).add(breakFoam), 0, 1).mul(foamPat).clamp(0, 0.72) as NF;
 
   // ---- compose --------------------------------------------------------------------
   mat.colorNode = vec3(0.74, 0.76, 0.74).mul(foam);

@@ -69,10 +69,26 @@ export class Engine {
   }
 
   static async create(params: LaasParams, hooks: LaasHooks): Promise<Engine> {
+    // The default WebGPU per-stage sampled-texture limit is 16, but the crete
+    // two-layer cadastre drape needs 17 in the terrain fragment shader (base +
+    // detail). Request the adapter's full supported limit (it reports 48 on this
+    // hardware) so the device isn't capped at the 16 default → otherwise the
+    // terrain pipeline is invalid and the whole frame fails (black/loading screen).
+    // Query the adapter first so we never request more than it supports (portable).
+    let extraLimits: Record<string, number> = {};
+    try {
+      const adapter = await navigator.gpu?.requestAdapter();
+      const maxTex = adapter?.limits?.maxSampledTexturesPerShaderStage ?? 16;
+      if (maxTex > 16) extraLimits = { maxSampledTexturesPerShaderStage: maxTex };
+    } catch {
+      /* no adapter query → fall back to default limits */
+    }
     const renderer = new WebGPURenderer({
       antialias: false,
       trackTimestamp: true,
-      requiredLimits: hooks.diag ? buildRequiredLimits(hooks.diag) : {},
+      requiredLimits: hooks.diag
+        ? { ...extraLimits, ...buildRequiredLimits(hooks.diag) }
+        : extraLimits,
     });
     await renderer.init();
     // fail-loud: surface WebGPU validation errors (otherwise: silent black frames)

@@ -79,6 +79,7 @@ import {
   vec4,
 } from 'three/tsl';
 import type { Heightfield } from '../world/Heightfield';
+import { worldSize } from '../world/WorldConst';
 import { hash12 } from '../gpu/noise/NoiseTSL';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import { canopyAt, type ScatterLayer, type ScatterResult } from '../gpu/passes/Scatter';
@@ -763,19 +764,26 @@ export class Forests {
         // sight line) — casters intentionally skip BOTH (an off-screen or
         // ridge-hidden tree still casts into the visible scene)
         const visMain = inFrustum(center, rad).toVar();
-        If(visMain.greaterThan(0.5).and(dist.greaterThan(140)), () => {
-          const top = vec3(A.x, A.y.add(hgt), A.z);
-          const occ = float(0).toVar();
-          for (let st = 1; st <= 7; st++) {
-            const t = st / 8;
-            const sp = camU.mul(1 - t).add(top.mul(t)) as unknown as NV3;
-            const th = hf.sampleHeightNearest(vec2(sp.x, sp.z));
-            occ.assign(occ.max(th.sub(sp.y)));
-          }
-          If(occ.greaterThan(4), () => {
-            visMain.assign(0);
+        // Terrain-occlusion march (hide trees behind ridges). SKIP on huge/coarse
+        // worlds (crete ≈ 137 m/texel): the coarse heightfield reads HIGHER than the
+        // true surface on slopes, so the march FALSE-occludes nearly every forest
+        // tree (Crete's woods sit on mountain slopes) → nothing renders. Disabling
+        // it only draws a few extra trees that the terrain depth-buffer hides anyway.
+        if (worldSize() < 50000) {
+          If(visMain.greaterThan(0.5).and(dist.greaterThan(140)), () => {
+            const top = vec3(A.x, A.y.add(hgt), A.z);
+            const occ = float(0).toVar();
+            for (let st = 1; st <= 7; st++) {
+              const t = st / 8;
+              const sp = camU.mul(1 - t).add(top.mul(t)) as unknown as NV3;
+              const th = hf.sampleHeightNearest(vec2(sp.x, sp.z));
+              occ.assign(occ.max(th.sub(sp.y)));
+            }
+            If(occ.greaterThan(4), () => {
+              visMain.assign(0);
+            });
           });
-        });
+        }
 
         if (kind === 'trees') {
           const pool = cls.mul(4).add(variant).toInt();

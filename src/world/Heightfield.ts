@@ -33,7 +33,7 @@ import type { WorldSeed } from '../core/Seed';
 import { bilerpFloatBuffer, uvToGrid } from '../gpu/BufferSample';
 import type { GavdosDataResult } from '../gavdos/GavdosData';
 import { bakeNoiseTextures } from '../gpu/passes/NoiseBake';
-import type { NF, NI, NV2, NV3 } from '../gpu/TSLTypes';
+import type { NF, NI, NV2, NV3, NV4 } from '../gpu/TSLTypes';
 import { runBiomeSnow } from '../gpu/passes/BiomeSnow';
 import { runErosion } from '../gpu/passes/Erosion';
 import { runFlowRivers, type FlowResult } from '../gpu/passes/FlowRivers';
@@ -77,6 +77,33 @@ export class Heightfield {
   fieldsTex: StorageTexture | null = null;
   /** rgba8 at full res: biomeId/8, snow, vegDensity, rockExposure */
   biomeTex: StorageTexture | null = null;
+  /**
+   * Crete-only: rgba8 sRGB satellite albedo drape at full res. Null in every
+   * procedural/gavdos/laas path; set only by fromGavdos when CreteData built it
+   * (satellite imagery loaded and `?sat=0` not set). When present the terrain
+   * material uses it as base albedo in the overview path.
+   */
+  satelliteTex: StorageTexture | null = null;
+  /**
+   * Crete live-streaming LOD only: a TSL vec4 uniform = (originX, originZ,
+   * sizeX, sizeZ) in WORLD coords describing the geographic window the
+   * satellite drape currently covers. Null in every other path → TerrainMaterial
+   * falls back to whole-world drape UV (byte-identical). Set by CreteData (init
+   * to the whole-island window) and mutated by CreteMapStream as the camera moves.
+   */
+  satWin: NV4 | null = null;
+  /**
+   * Crete two-layer LOD only: a SECOND high-detail satellite drape the streamer
+   * re-fills for the focused window, blended over satelliteTex in TerrainMaterial.
+   * Null in every other path. Set by CreteData (empty), filled by CreteMapStream.
+   */
+  satDetailTex: StorageTexture | null = null;
+  /**
+   * Crete two-layer LOD only: the detail drape's window uniform = (originX,
+   * originZ, sizeX, sizeZ) in WORLD coords. Null elsewhere. Set by CreteData to a
+   * degenerate off-world window, mutated by CreteMapStream as the camera moves.
+   */
+  satDetailWin: NV4 | null = null;
   /** CPU height mirror for camera clamping / tools (filled by readback) */
   cpuHeights: Float32Array | null = null;
   /** CPU waterY mirror (sim res) — underwater camera guard */
@@ -127,6 +154,13 @@ export class Heightfield {
     hf.waterFarRes = data.waterFarRes;
     hf.fieldsTex = data.fieldsTex;
     hf.biomeTex = data.biomeTex;
+    // Optional crete satellite drape; null for gavdos (data.satelliteTex undefined).
+    hf.satelliteTex = data.satelliteTex ?? null;
+    // Optional crete live-stream drape window uniform; null for gavdos/laas.
+    hf.satWin = data.satWin ?? null;
+    // Optional crete two-layer-LOD detail drape + window; null for gavdos/laas.
+    hf.satDetailTex = data.satDetailTex ?? null;
+    hf.satDetailWin = data.satDetailWin ?? null;
     hf.noiseA = data.noiseA;
     hf.noiseB = data.noiseB;
     hf.cpuHeights = data.cpuHeights;

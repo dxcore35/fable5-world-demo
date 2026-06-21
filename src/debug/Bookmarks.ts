@@ -15,6 +15,7 @@ import type { Engine } from '../core/Engine';
 import type { LaasHooks } from '../core/Hooks';
 import type { LaasParams } from '../core/Params';
 import type { Heightfield } from '../world/Heightfield';
+import { lonLatToWorld as creteLonLatToWorld } from '../crete/CreteConst';
 
 // ---------------------------------------------------------------------------
 // Gavdos bookmarks (active ONLY when world=gavdos, keys 1–8)
@@ -61,6 +62,25 @@ export const GAVDOS_BOOKMARKS: Bookmark[] = [
 
   // 8 — Whole-island offshore: ~2500 m SW, y≈900, looking NE over full island
   { name: 'Whole-island offshore', x: -1767, z: 1768, alt: 900, yaw: -2.36, pitch: -0.35, tod: 13 },
+];
+
+// ---------------------------------------------------------------------------
+// Crete bookmarks (active ONLY when world=crete). Real GPS locations → world
+// via CreteConst.lonLatToWorld(); alt is metres above ground (water-guarded).
+// ---------------------------------------------------------------------------
+function creteBm(name: string, lng: number, lat: number, alt: number, yaw: number, pitch: number, tod: number): Bookmark {
+  const { x, z } = creteLonLatToWorld(lng, lat);
+  return { name, x, z, alt, yaw, pitch, tod };
+}
+export const CRETE_BOOKMARKS: Bookmark[] = [
+  creteBm('Whole island', 24.875, 35.10, 95000, 0, -0.95, 13),
+  creteBm('Chania · Balos', 23.60, 35.52, 9000, 0.4, -0.5, 11),
+  creteBm('Elafonisi', 23.54, 35.27, 6000, 0.2, -0.5, 16.5),
+  creteBm('Rethymno', 24.47, 35.37, 7000, 0.0, -0.5, 13),
+  creteBm('Heraklion · Knossos', 25.13, 35.32, 8000, 0.0, -0.5, 12),
+  creteBm('Samaria · Sfakia', 24.07, 35.24, 9000, 3.14, -0.55, 15),
+  creteBm('Elounda · Spinalonga', 25.74, 35.29, 6000, 0.0, -0.5, 17.5),
+  creteBm('Gavdos', 24.08, 34.84, 8000, 0.0, -0.6, 14),
 ];
 
 export interface Bookmark {

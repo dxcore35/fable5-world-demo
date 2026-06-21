@@ -52,6 +52,7 @@ import {
 } from 'three/tsl';
 import { bakeNoiseTextures } from '../gpu/passes/NoiseBake';
 import type { FloatBuffer } from '../gpu/passes/HeightSynthesis';
+import type { NV4 } from '../gpu/TSLTypes';
 import { Biome, worldSize } from '../world/WorldConst';
 import {
   CROP_H,
@@ -60,6 +61,7 @@ import {
   CROP_Y0,
   SRC_WIDTH,
 } from './GavdosConst';
+import { conditionHeightsToCoastline } from './GavdosCoastline';
 
 // -------------------------------------------------------------------------
 // Mask→biome mapping (v1)
@@ -210,14 +212,56 @@ export interface GavdosDataResult {
   cpuWeights: Float32Array;
   /** Upsampled resolution (same as heightRes) */
   vegRes: number;
+  /**
+   * Optional whole-Crete satellite albedo drape (rgba8, sRGB) at heightRes.
+   * Built ONLY by CreteData when satellite imagery loads and `?sat=0` is not
+   * set; null/undefined everywhere else (gavdos/laas never populate it).
+   * When present the terrain material uses it as the base albedo in the
+   * crete-overview path; when absent shading is byte-identical to before.
+   */
+  satelliteTex?: StorageTexture | null;
+  /**
+   * Optional crete live-stream drape window: a TSL vec4 uniform = (originX,
+   * originZ, sizeX, sizeZ) in WORLD coords for the rectangle satelliteTex covers.
+   * Built ONLY by CreteData (init to the whole-island window); null/undefined
+   * everywhere else. TerrainMaterial uses it to map drape UVs; absent → whole-
+   * world UV (byte-identical). Mutated at runtime by CreteMapStream.
+   */
+  satWin?: NV4 | null;
+  /**
+   * Optional crete two-layer-LOD DETAIL drape (high-zoom window). Built ONLY by
+   * CreteData (empty, paired with a degenerate window); null/undefined elsewhere.
+   * Re-filled at runtime by CreteMapStream; TerrainMaterial blends it over the
+   * coarse base. Absent => base-only (byte-identical).
+   */
+  satDetailTex?: StorageTexture | null;
+  /**
+   * Optional crete two-layer-LOD DETAIL window: vec4 uniform (originX, originZ,
+   * sizeX, sizeZ) for the rectangle satDetailTex covers. Built by CreteData as a
+   * degenerate off-world window; mutated by CreteMapStream. Absent => no detail.
+   */
+  satDetailWin?: NV4 | null;
 }
 
 export async function loadGavdosData(
   renderer: Renderer,
   heightRes: number,
   simRes: number,
-  onProgress: (p: number, msg: string) => void,
+  onProgressRaw: (p: number, msg: string) => void,
 ): Promise<GavdosDataResult> {
+  // --- timing: record ms spent on each stage (the work between progress calls) ---
+  const _marks: { stage: string; ms: number }[] = [];
+  const _t0 = performance.now();
+  let _tPrev = _t0;
+  let _prevMsg = 'init';
+  const onProgress = (p: number, msg: string): void => {
+    const now = performance.now();
+    _marks.push({ stage: _prevMsg, ms: Math.round(now - _tPrev) });
+    _tPrev = now;
+    _prevMsg = msg;
+    onProgressRaw(p, msg);
+  };
+
   // --- 1. Fetch raw buffers ---------------------------------------------------
   onProgress(0.01, 'gavdos: fetching heightmap');
   const [hmResp, maskResp, specResp, wgtResp] = await Promise.all([
@@ -297,6 +341,16 @@ export async function loadGavdosData(
       const mean = localMean9x9(heightCpu, heightRes, i);
       heightCpu[i] = (heightCpu[i] ?? 0) * (1 - ROAD_ALPHA) + mean * ROAD_ALPHA;
     }
+  }
+
+  // --- 5b. Snap waterline to sharp OSM coastline (sign-correction only) -------
+  onProgress(0.46, 'gavdos: snapping coastline to OSM');
+  const coastStats = await conditionHeightsToCoastline(heightCpu, heightRes);
+  if (coastStats) {
+    console.log(
+      `[gavdos] coastline snap: ${coastStats.bandCells} band cells, ` +
+      `${coastStats.lifted} lifted, ${coastStats.sunk} sunk`,
+    );
   }
 
   // --- 6. Upload height + hardness to GPU ------------------------------------
@@ -437,6 +491,9 @@ export async function loadGavdosData(
   const cpuWaterY = new Float32Array(simRes * simRes).fill(DRY_SENTINEL);
 
   onProgress(0.98, 'gavdos: data ready');
+  _marks.push({ stage: 'TOTAL', ms: Math.round(performance.now() - _t0) });
+  console.log(`[gavdos] data load: ${_marks[_marks.length - 1].ms} ms @ heightRes=${heightRes}, simRes=${simRes}`);
+  console.table(_marks);
   return {
     height: heightBuf,
     hardness: hardnessBuf,

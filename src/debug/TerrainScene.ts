@@ -7,8 +7,19 @@
  * ?alt=N puts the camera N meters above ground (ground-clamped spawn).
  */
 
-import { TextureLoader, type Texture } from 'three';
+import { TextureLoader, type Texture, InstancedMesh, PlaneGeometry, Matrix4, Euler, Color, Vector3 } from 'three';
 import { BOOKMARKS, installBookmarks } from './Bookmarks';
+import { installViewButtons } from './ViewButtons';
+import { installBeachMarkers } from '../crete/CreteBeachMarkers';
+import { installCreteBuildings } from '../crete/CreteBuildings';
+import { buildNaniteChaniaMesh } from '../crete/CreteNanite';
+import { installCreteRoads } from '../crete/CreteRoads';
+import { installCreteGreenery } from '../crete/CreteGreenery';
+import { buildCreteScatter } from '../crete/CreteScatter';
+import { installCreteMapStream } from '../crete/CreteMapStream';
+import { installCreteCoastlineOverlay } from '../crete/CreteCoastlineOverlay';
+import { buildCreteLandMask, refillCreteLandMask } from '../crete/CreteLandMask';
+import type { StorageTexture } from 'three/webgpu';
 import { Froxels } from '../gpu/passes/Froxels';
 import { PARTICLE_COUNT, Particles } from '../gpu/passes/Particles';
 import { ProbeGI } from '../gpu/passes/ProbeGI';
@@ -17,6 +28,8 @@ import { addScatterDebug } from './ScatterDebug';
 import { Forests } from '../vegetation/Forests';
 import { GroundRing } from '../vegetation/GroundRing';
 import { buildVegLibrary } from '../vegetation/VegLibrary';
+import { MeshStandardNodeMaterial } from 'three/webgpu';
+import { worldSize } from '../world/WorldConst';
 import { CausticsBake, setCausticContext } from '../render/Caustics';
 import { setWindContext, windU } from '../render/Wind';
 import { sunU, updateSunUniforms } from '../render/VegMaterials';
@@ -27,6 +40,8 @@ import { makeMacroParams } from '../world/MacroMap';
 import { qualityConfig, setActiveWorldSize } from '../world/WorldConst';
 import { buildGavdosHeightfield } from '../gavdos/GavdosWorld';
 import { GAVDOS_WORLD_SIZE } from '../gavdos/GavdosConst';
+import { buildCreteHeightfield } from '../crete/CreteWorld';
+import { CRETE_WORLD_SIZE } from '../crete/CreteConst';
 import { GavdosOcean } from '../gavdos/GavdosOcean';
 import {
   buildGavdosVegLibrary,
@@ -51,7 +66,17 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
     // Set world size BEFORE any system is constructed (gavdos = full island 10240 m)
     setActiveWorldSize(GAVDOS_WORLD_SIZE);
     // Real-data world: skip procedural synthesis/erosion/hydrology
-    const cfg = qualityConfig(params.preset);
+    const baseCfg = qualityConfig(params.preset);
+    // Gavdos source elevation is 30 m (FABDEM). heightRes>2048 over the 10240 m
+    // window just oversamples (2048 = 5 m texels ≈ 6× source); the cost falls on
+    // every CPU pass, GPU kernel, texture upload, the veg grid and GI ray-march —
+    // and on runtime fps. Cap grids for speed + smoothness. ?hres=N overrides (A/B).
+    const hresQ = Number(new URLSearchParams(location.search).get('hres'));
+    const heightRes = Number.isFinite(hresQ) && hresQ > 0 ? hresQ : Math.min(baseCfg.heightRes, 2048);
+    const cfg = { ...baseCfg, heightRes, simRes: Math.min(baseCfg.simRes, 1024) };
+    if (cfg.heightRes !== baseCfg.heightRes || cfg.simRes !== baseCfg.simRes) {
+      console.log(`[gavdos] grids capped for 30 m source: heightRes ${baseCfg.heightRes}→${cfg.heightRes}, simRes ${baseCfg.simRes}→${cfg.simRes}`);
+    }
     const mp = makeMacroParams(seed); // neutral mp (only far-shell analytic uses it)
     hf = await buildGavdosHeightfield(
       engine.renderer,
@@ -65,6 +90,59 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
       ctx.hooks.initialPoseMode = 'fly';
       engine.camera.position.set(0, 1800, 0);
     }
+  } else if (params.world === 'crete') {
+    // Set world size BEFORE any system is constructed (crete = whole island 280000 m)
+    setActiveWorldSize(CRETE_WORLD_SIZE);
+    // Whole-Crete base layer: skip procedural synthesis/erosion/hydrology.
+    const baseCfg = qualityConfig(params.preset);
+    // The Crete window is huge (280 km); cap the grid at 2048 for fast load
+    // (3072 pushed load to 40 s — unacceptable; brute-force resolution doesn't
+    // scale here, that's what the streamed detail-on-demand layer is for).
+    // ?hres=N overrides (A/B).
+    const hresQ = Number(new URLSearchParams(location.search).get('hres'));
+    const heightRes = Number.isFinite(hresQ) && hresQ > 0 ? hresQ : Math.min(baseCfg.heightRes, 2048);
+    const cfg = { ...baseCfg, heightRes, simRes: Math.min(baseCfg.simRes, 1024) };
+    if (cfg.heightRes !== baseCfg.heightRes || cfg.simRes !== baseCfg.simRes) {
+      console.log(`[crete] grids capped: heightRes ${baseCfg.heightRes}→${cfg.heightRes}, simRes ${baseCfg.simRes}→${cfg.simRes}`);
+    }
+    const mp = makeMacroParams(seed); // neutral mp (only far-shell analytic uses it)
+    hf = await buildCreteHeightfield(
+      engine.renderer,
+      cfg,
+      mp,
+      (p, m) => ctx.progress(p * 0.92, m),
+    );
+    // Crete spawn: high over origin so the whole 280 km world frames in view.
+    if (params.cam === null) {
+      const eyeY = CRETE_WORLD_SIZE * 0.18;
+      ctx.hooks.initialPose = { p: [0, eyeY, 0], yaw: 0, pitch: -0.85 };
+      ctx.hooks.initialPoseMode = 'fly';
+      engine.camera.position.set(0, eyeY, 0);
+    }
+    // Per-frame camera conditioning: solid-terrain clamp + adaptive near/far.
+    const updateCreteCamera = (): void => {
+      const cam = engine.camera;
+      const ground = Math.max(0, hf.heightAtCpu(cam.position.x, cam.position.z));
+      // SOLID TERRAIN: never let the fly camera sink into the ground/mountains.
+      // "Flying through a mountain and seeing the sea" is the camera being INSIDE
+      // terrain while the near plane clips its front faces. Keep ≥25 m above ground.
+      const minY = ground + 25;
+      if (cam.position.y < minY) cam.position.y = minY;
+      // NEAR keyed off ALTITUDE-ABOVE-GROUND (not absolute altitude): tiny when
+      // skimming terrain so nearby slopes can never be near-clipped (no
+      // see-through); large only when high over open sea, for depth precision
+      // (kills the z-fighting "see under mountains" at the overview). FAR keys off
+      // absolute altitude so you can still zoom right out.
+      const agl = Math.max(10, cam.position.y - ground);
+      // tuned draw distances for crete: sharper closeups (smaller near at low agl), no pop at speed
+      const far = Math.max(cam.position.y * 7.5, 42000);
+      const near = Math.min(Math.max(agl * 0.28, 0.8), far * 0.45);
+      cam.near = near;
+      cam.far = far;
+      cam.updateProjectionMatrix();
+    };
+    updateCreteCamera();
+    engine.onUpdate(updateCreteCamera);
   } else {
     hf = await Heightfield.generate(
       engine.renderer,
@@ -108,6 +186,12 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
     const rocksPlaced = await placeGavdosRocks(gavdosScatter, hf.gavdosVegData);
     console.log(`[gavdos] scatter: trees=${gavdosScatter.trees.count} under=${gavdosScatter.understory.count} extras=${gavdosScatter.extras.count} stones=${gavdosScatter.stones.count} rocksJson=${rocksPlaced}`);
     scatter = gavdosScatter as unknown as typeof scatter;
+  } else if (params.world === 'crete') {
+    // Crete: real OSM-polygon Mediterranean scatter (trees + phrygana shrubs)
+    // placed ONLY inside wood/park outlines, fed into the SAME Forests pipeline
+    // as the default scene. Cities/roads/fields stay bare so the cadastre map shows.
+    const creteScatter = await buildCreteScatter(hf);
+    scatter = creteScatter as unknown as typeof scatter;
   } else {
     scatter = await runScatter(engine.renderer, hf, seed);
   }
@@ -120,6 +204,17 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   const ablate = new Set(
     (new URLSearchParams(window.location.search).get('ablate') ?? '').split(','),
   );
+  // Crete: render real OSM-placed Mediterranean trees + shrubs (CreteScatter) via
+  // the Forests pipeline, but keep the full-island grass carpet / shell / particles
+  // / froxels OFF so the cadastre orthophoto stays visible between the trees.
+  // (?veg=0 restores the old map-only view for A/B.)
+  if (params.world === 'crete') {
+    // Enable the near-camera GRASS ring (like the default demo) — it sits on the
+    // cadastre and only appears close to the ground, so it adds lushness without
+    // hiding the map from altitude. Keep the full-screen shell/particles/froxels off.
+    for (const a of ['shell', 'particles', 'froxels']) ablate.add(a);
+    if (new URLSearchParams(window.location.search).get('veg') === '0') ablate.add('veg');
+  }
 
   // irradiance probe field (Phase 3 GI; canopy-aware since Phase 5 —
   // ?ablate=canopygi rebuilds the bare-heightfield field for A/B)
@@ -136,8 +231,9 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // Phase 6 caustics: per-frame analytic bake + module context — MUST be
   // set before any material factory runs (terrain tiles, rocks, debris all
   // self-apply at build time). ?ablate=caustics to A/B, ?caustk=N to tune.
-  // Gavdos: no hydrology flow field (hf.flow === null) → caustics disabled.
-  if (!ablate.has('caustics') && params.world !== 'gavdos') {
+  // Real-DEM worlds (gavdos/crete) have no hydrology flow field (hf.flow === null)
+  // → caustics disabled. Only the procedural 'laas' world has the flow field.
+  if (!ablate.has('caustics') && params.world === 'laas') {
     const bake = new CausticsBake();
     const ck = Number(new URLSearchParams(window.location.search).get('caustk') ?? NaN);
     if (Number.isFinite(ck)) bake.focusK.value = ck;
@@ -163,12 +259,20 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   if (params.world === 'gavdos') {
     try {
       gavdosRoadMaskTex = await new Promise<Texture>((resolve, reject) => {
-        new TextureLoader().load('/gavdos/roadmask.png', resolve, undefined, reject);
+        new TextureLoader().load('/gavdos/roadmask.png', (t) => { t.anisotropy = 8; t.generateMipmaps = true; resolve(t); }, undefined, reject);
       });
     } catch {
       // roadmask texture optional — roads just won't tint terrain
     }
   }
+
+  // Crete land mask (rasterised OSM/cadastre coastline; r ≈ land[1]/sea[0]). Built
+  // BEFORE the tiles so the terrain material can CLIP the 3D surface at the coast
+  // (sea-side fragments discarded), and reused by the ocean below so both meet at
+  // the same edge. null for gavdos/laas → no clip. The runtime coastline-source
+  // toggle re-fills this same texture in place, keeping terrain + ocean in sync.
+  let creteLandMaskTex: StorageTexture | null =
+    params.world === 'crete' ? await buildCreteLandMask(engine.renderer) : null;
 
   ctx.progress(0.958, 'terrain: building tiles');
   const view = new URLSearchParams(window.location.search).get('view');
@@ -192,6 +296,18 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
       gi,
       canopyTex,
       roadMaskTex: gavdosRoadMaskTex,
+      // Crete is a ~280 km island in a ~10 km world (≈137 m/texel): suppress
+      // the meso/micro detail + rock-strata zebra that alias into B/W speckle.
+      // false for gavdos/laas → their shading is unchanged.
+      overview: params.world === 'crete',
+      // Crete coast-cut: clip the 3D surface at the chosen coastline (sea-side
+      // fragments discarded) so the map ends at the shore and the ocean meets it
+      // cleanly. Re-enabled now the 16-texture limit is fixed (Engine.ts requests
+      // the adapter max). ?coastcut=0 disables it for A/B.
+      landMaskTex:
+        new URLSearchParams(window.location.search).get('coastcut') === '0'
+          ? null
+          : creteLandMaskTex,
     });
     engine.scene.add(tiles.mesh);
     engine.scene.add(tiles.farShell);
@@ -207,18 +323,105 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // Gavdos: WaterMaterial requires hf.flow (hydrology); gavdos has none.
   // [GAVDOS-WATER-HOOK] — T3 ocean: GavdosOcean replaces WaterSurface + far shell.
   if (view !== 'split' && !ablate.has('water')) {
-    if (params.world === 'gavdos') {
+    if (params.world === 'gavdos' || params.world === 'crete') {
       // Real Mediterranean ocean: no flow field required.
       // Far shell already added above is the procedural terrain ring — hide it
       // for gavdos (the far sea disc inside GavdosOcean replaces it).
       if (tiles) tiles.farShell.visible = false;
+      // crete: sharp-trim the sea at the OSM coastline via the rasterized land mask
+      // already built above (same texture the terrain coast-cut uses). gavdos = null.
+      const landMask = creteLandMaskTex;
       const ocean = new GavdosOcean(
         hf,
         sunSky.atmosphere,
         ablate.has('gi') ? null : gi,
+        landMask,
       );
       engine.scene.add(ocean.group);
       engine.onUpdate(() => ocean.update(engine.camera));
+
+      // Crete beach shell/pebble scatter (instanced low-poly cards for speed).
+      // Fast: low count (capped), aggressive distance cull, cheap plane cards.
+      // Uses CreteCoastline-conditioned heights + CreteLandMask (via coastal h band).
+      // Placement scans cpuHeights (cheap O(res) at boot). Interacts with water via
+      // terrain sand wet/runup (pebbles sit on animated wet/dry PBR sand).
+      if (params.world === 'crete' && hf.cpuHeights) {
+        const MAX_BEACH = 14000;
+        const STEP = 3; // subsample the height grid for coastal only
+        const BEACH_H0 = 0.15, BEACH_H1 = 8.5;
+        const pos: Array<{x:number; y:number; z:number; yaw:number; s:number; c:number}> = [];
+        const res = hf.res;
+        const ws = worldSize();
+        const cell = ws / res;
+        const rng = (i: number) => ((i * 1664525 + 1013904223) >>> 0) / 0xffffffff;
+        for (let y = 1; y < res - 1; y += STEP) {
+          for (let x = 1; x < res - 1; x += STEP) {
+            const i = y * res + x;
+            const h = hf.cpuHeights[i] ?? 0;
+            if (h <= BEACH_H0 || h >= BEACH_H1) continue;
+            if (rng(i) > 0.22) continue;
+            const wx = ((x + 0.5) / res - 0.5) * ws;
+            const wz = ((y + 0.5) / res - 0.5) * ws;
+            const jitter = (rng(i+7)-0.5) * cell * 0.8;
+            const jz = (rng(i+11)-0.5) * cell * 0.8;
+            const hy = hf.heightAtCpu(wx + jitter, wz + jz) + 0.018 + rng(i+3) * 0.03;
+            if (hy < 0.05) continue;
+            pos.push({
+              x: wx + jitter, y: hy, z: wz + jz,
+              yaw: rng(i+5) * Math.PI * 2,
+              s: 0.12 + rng(i+9) * 0.19,
+              c: rng(i+13),
+            });
+            if (pos.length >= MAX_BEACH) break;
+          }
+          if (pos.length >= MAX_BEACH) break;
+        }
+        if (pos.length > 0) {
+          // low-poly card (two tri) — threejs-geometry (low poly) + cards for speed.
+          const card = new PlaneGeometry(0.9, 0.6);
+          card.rotateX(-Math.PI * 0.5 + 0.12);
+          const beachMat = new MeshStandardNodeMaterial({ metalness: 0.0, roughness: 0.82, envMapIntensity: 0.15 });
+          const inst = new InstancedMesh(card, beachMat, pos.length);
+          inst.castShadow = true; inst.receiveShadow = true;
+          const m4 = new Matrix4(); const eul = new Euler(); const col = new Color();
+          pos.forEach((p, k) => {
+            eul.set(0, p.yaw, (p.c - 0.5) * 0.11);
+            m4.makeRotationFromEuler(eul);
+            m4.setPosition(p.x, p.y, p.z);
+            const sc = p.s * (0.7 + (p.c > 0.6 ? 0.35 : 0));
+            m4.scale(new Vector3(sc, sc * (0.6 + p.c * 0.1), sc));
+            inst.setMatrixAt(k, m4);
+            col.set(p.c > 0.62 ? 0xe8d9b8 : (p.c > 0.38 ? 0xb8b2a3 : 0x8f8a7f));
+            inst.setColorAt(k, col);
+          });
+          inst.instanceMatrix.needsUpdate = true;
+          if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+          engine.scene.add(inst);
+
+          // Aggressive distance cull (fast first). Repack near matrices.
+          const CULL = 520;
+          engine.onUpdate(() => {
+            const cx = engine.camera.position.x, cy = engine.camera.position.y, cz = engine.camera.position.z;
+            const near: number[] = [];
+            for (let k = 0; k < pos.length; k++) {
+              const p = pos[k];
+              const dx = p.x - cx, dy = p.y - cy, dz = p.z - cz;
+              if ((dx * dx + dy * dy + dz * dz) < CULL * CULL) near.push(k);
+            }
+            if (near.length === 0) { inst.count = 0; return; }
+            for (let j = 0; j < near.length; j++) {
+              inst.getMatrixAt(near[j], m4);
+              inst.setMatrixAt(j, m4);
+              if (inst.instanceColor) { inst.getColorAt(near[j], col); inst.setColorAt(j, col); }
+            }
+            inst.count = near.length;
+            inst.instanceMatrix.needsUpdate = true;
+            if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+          });
+          // eslint-disable-next-line no-console
+          console.log(`[crete] beach pebbles: ${pos.length} instanced cards (cull ${CULL}m)`);
+        }
+      }
     } else {
       const water = new WaterSurface(
         hf,
@@ -234,7 +437,10 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // Phase 5: variant pools + GPU cull → compacted indirect draws
   let forestsRef: Forests | null = null;
   if (view !== 'scatter' && !ablate.has('veg')) {
-    const lib = params.world === 'gavdos'
+    // Crete reuses the gavdos Mediterranean library (juniper/pine/olive + phrygana)
+    // so its trees look right for a Greek island, with the same LOD/impostor/shadow
+    // rendering as the default scene.
+    const lib = params.world === 'gavdos' || params.world === 'crete'
       ? await buildGavdosVegLibrary(engine.renderer, seed, (p, m) =>
           ctx.progress(0.963 + p * 0.006, m))
       : await buildVegLibrary(engine.renderer, seed, (p, m) =>
@@ -250,6 +456,10 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
     forestsRef = forests;
     engine.scene.add(forests.group);
     updateSunUniforms(sunSky.sun);
+  if (params.world === 'crete') {
+    // Aegean beach pop: stronger direct sun for wet-sand specular + bright land
+    sunSky.sun.intensity = Math.max(sunSky.sun.intensity, 5.8);
+  }
     engine.onUpdate(() => {
       forests.update(engine.renderer, engine.camera);
       Object.assign(engine.stats.counters, forests.counterSnapshot());
@@ -257,10 +467,14 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
 
     // near-field carpets: 800k-blade grass ring + 80k debris ring
     if (!ablate.has('grass')) {
-      const grassDryBias = params.world === 'gavdos' ? GAVDOS_DRY_BIAS : 0;
+      // Crete uses the gavdos Mediterranean library, so its grass takes the same
+      // dry-golden bias + phrygana atlas (the 'beech' atlas only exists in the laas
+      // library). Crete a touch less golden than arid Gavdos.
+      const grassDryBias =
+        params.world === 'gavdos' ? GAVDOS_DRY_BIAS : params.world === 'crete' ? 0.7 : 0;
       const ring = new GroundRing(hf, canopyTex, seed, ablate.has('gi') ? null : gi, grassDryBias);
-      // Gavdos: use phrygana foliage atlas for the grass layer atlas ref
-      const atlasRef = params.world === 'gavdos'
+      const medLib = params.world === 'gavdos' || params.world === 'crete';
+      const atlasRef = medLib
         ? (lib.atlases.get('phrygana') ?? lib.atlases.get('gavdosJuniper') ?? null)
         : lib.atlases.get('beech') ?? null;
       ring.init(atlasRef);
@@ -294,6 +508,13 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   ctx.progress(0.97, 'sky: baking cloud noise');
   const clouds = new Clouds(sunSky.atmosphere);
   await clouds.init(engine.renderer);
+  // Crete = map explorer: thin/sparse clouds so they never white out the cadastre
+  // map + greenery (default 0.62/0.85 covered the whole island). ?cov/?dens override.
+  if (params.world === 'crete') {
+    const cq = new URLSearchParams(location.search);
+    if (!cq.has('cov')) clouds.coverage.value = 0.20;
+    if (!cq.has('dens')) clouds.density.value = 0.45;
+  }
   // weather motion (Pillar F): drift on WORLD time so ?freeze=1 shots stay
   // deterministic; the drifted shadow map re-bakes itself every ~2.5 s
   let lastWt = 0;
@@ -303,8 +524,20 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   });
 
   // 4-cascade CSM + PCSS contact hardening; cloud shadows gate the sun term
+  // Crete 280 km world: pass large maxFar + lightMargin so distant massifs cast
+  // into valleys/beaches. Per-cascade map sizes for tight near + cheap far.
+  // (Gallery/ShadowTest keep their small values for their ~1 km test scenes.)
+  const isCrete = params.world === 'crete';
+  const shadowOpts = isCrete
+    ? {
+        maxFar: 95000,
+        lightMargin: 4500,
+        cascadeMapSizes: [2048, 1536, 1024, 512],
+      }
+    : undefined;
   const shadowRig = setupSunShadows(sunSky.sun, engine.camera, (wxz) =>
     clouds.shadowAt(wxz),
+    shadowOpts,
   );
   // cascade cameras drive the per-cascade caster cull in Forests
   forestsRef?.setCSM(shadowRig.csm ?? null);
@@ -362,10 +595,10 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // camera spawn: ground-clamped (?alt/x/z → fly) or the DEFAULT WALK SPAWN
   // at the map center — first dry, reasonably flat spot on a spiral out
   // from (0,0), eye at head height, facing the NE massif
-  // Gavdos spawn is set inside the world-branch above; skip this block for it.
+  // Gavdos/crete spawn is set inside the world-branch above; skip this block for them.
   const q = new URLSearchParams(window.location.search);
   const alt = Number(q.get('alt') ?? NaN);
-  if (params.cam === null && params.world !== 'gavdos') {
+  if (params.cam === null && params.world !== 'gavdos' && params.world !== 'crete') {
     if (Number.isFinite(alt)) {
       const x = Number(q.get('x') ?? 600);
       const z = Number(q.get('z') ?? 900);
@@ -390,6 +623,65 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
 
   // composed bookmarks (keys 1-9, ?shot=N) + 92 s flythrough (?fly=1 / F)
   installBookmarks(engine, hf, ctx.hooks, params);
+
+  // on-screen camera-view buttons: Ground / Beach / House + Drone-orbit toggle
+  installViewButtons(engine, hf, ctx.hooks, params);
+
+  // Beach POI markers (Crete world only) — DOM-overlay photo cards + leader lines.
+  installBeachMarkers(engine, hf, ctx.hooks, params);
+
+  // Extruded 3D buildings (Crete world only) — merged per-town, distance-culled.
+  // ?nanite=1: skip the real Chania bucket — Nanite renderer covers it.
+  // NB: town index 1 ([24.02]) holds the dense Chania-city buildings (≈5,633);
+  // index 0 ([23.7], labelled "Chania") is ~30km west and catches ~none.
+  const naniteSkip = params.nanite ? new Set([1]) : new Set<number>();
+  installCreteBuildings(engine, hf, params, naniteSkip);
+
+  // T3b Nanite: one indirect indexed-instanced draw for all 961 LOD0 Chania clusters.
+  if (params.nanite) {
+    buildNaniteChaniaMesh()
+      .then((mesh) => {
+        engine.scene.add(mesh);
+        console.log('[nanite] T3b: Chania LOD0 mesh added (961 clusters, 1 draw call)');
+      })
+      .catch((e) => console.error('[nanite] buildNaniteChaniaMesh failed', e));
+  }
+
+  // Draped road ribbons (Crete world only) — merged, altitude-culled.
+  installCreteRoads(engine, hf, params);
+
+  // Real OSM-placed greenery (Crete world only): sparse instanced 3D trees inside
+  // actual wood/park polygons + flat translucent lakes for real inland water.
+  // Async (fetches greenery.json); altitude-culled; cadastre map stays visible.
+  // Trees now come from the Forests pipeline (CreteScatter); CreteGreenery keeps
+  // only the inland lakes. ?veg=0 (map-only) → restore the simple cone trees.
+  installCreteGreenery(engine, hf, params, {
+    trees: new URLSearchParams(window.location.search).get('veg') === '0',
+  });
+
+  // Live map-tile streaming (Crete world only): re-textures the terrain drape
+  // with high-zoom Hellenic Cadastre orthophoto tiles for the visible footprint
+  // as the camera zooms/moves. No-op unless the satellite drape loaded. Runs
+  // after the tiles mesh is added so the material already references hf.satWin.
+  installCreteMapStream(engine, hf, params);
+
+  // Detected coastline drawn as a bright line over the surface (Crete only), visible
+  // at every zoom + a 3-state Coast button (cadastre / osm / off). Async (fetches geojson).
+  // Once the overlay exists, register setCoastlineSource to switch BOTH detectors at
+  // runtime: re-fill the ocean's land mask in place from the chosen source AND retarget
+  // the overlay line. 'off' keeps the LAST ocean mask (re-filling needs a source) and
+  // just hides the overlay line — simplest, and the trim is invisible without the line.
+  installCreteCoastlineOverlay(engine, hf, ctx.hooks, params)
+    .then((overlay) => {
+      if (!overlay) return;
+      ctx.hooks.setCoastlineSource = async (s) => {
+        if (s !== 'off' && creteLandMaskTex) {
+          await refillCreteLandMask(engine.renderer, creteLandMaskTex, s);
+        }
+        await overlay.setSource(s);
+      };
+    })
+    .catch((e) => console.error('[crete] coastline overlay failed', e));
 
   ctx.progress(1, 'terrain ready');
 }

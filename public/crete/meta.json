@@ -1,0 +1,16 @@
+{
+  "width": 3072,
+  "height": 1088,
+  "bounds": {
+    "west": 23.35,
+    "south": 34.7,
+    "east": 26.4,
+    "north": 35.78
+  },
+  "minElevation": -50.0,
+  "maxElevation": 2433.512939453125,
+  "sources": {
+    "land": "crete_dem.tif (30 m)",
+    "note": "whole-Crete base layer for fable5 crete world"
+  }
+}

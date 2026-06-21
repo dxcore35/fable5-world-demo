@@ -10,7 +10,7 @@
  *   blended to the baked field across the world edge.
  */
 
-import { InstancedMesh, PlaneGeometry, RingGeometry, Mesh, type PerspectiveCamera, type Texture } from 'three';
+import { InstancedMesh, PlaneGeometry, RingGeometry, Mesh, Frustum, Matrix4, Vector3, type PerspectiveCamera, type Texture } from 'three';
 import {
   IrradianceNode,
   MeshPhysicalNodeMaterial,
@@ -23,6 +23,8 @@ import {
   clamp,
   float,
   fract,
+  select,
+  sin,
   smoothstep,
   instanceIndex,
   instancedArray,
@@ -31,6 +33,7 @@ import {
   positionWorld,
   screenUV,
   texture,
+  time,
   transformNormalToView,
   varying,
   vec2,
@@ -54,8 +57,8 @@ import { FAR_RADIUS, worldHalf, worldSize } from './WorldConst';
 
 const MAX_TILES = 2048;
 const PATCH_SEGS = 64;
-/** split while camDist < size·SPLIT_K */
-const SPLIT_K = 2.1;
+/** split while camDist < size·SPLIT_K — lower => sharper close perfectiles */
+const SPLIT_K = 1.95;
 const MIN_TILE = 64;
 /** rough/steep tiles may refine below MIN_TILE (cliff close-ups) */
 const MIN_TILE_ROUGH = 32;
@@ -71,6 +74,10 @@ export class TerrainTiles {
   activeTiles = 0;
   /** per-level height ranges: level 0 = 64×64 grid of 64 m cells, then halves */
   private rangePyr: Float32Array[] = [];
+  // reused for frustum culling (no alloc per update)
+  private _pv = new Matrix4();
+  private _frustum = new Frustum();
+  private _cullVec = new Vector3();
 
   constructor(
     hf: Heightfield,
@@ -87,6 +94,19 @@ export class TerrainTiles {
        * tan is blended over the terrain where road > 0. Default world = absent.
        */
       roadMaskTex?: Texture | null;
+      /**
+       * Crete-overview shading: suppress meso/micro detail + rock-strata zebra
+       * and soften slope→rock so the ~280 km island doesn't speckle at its
+       * ≈137 m/texel scale. Threaded into buildTerrainShading (near + far).
+       * Default false → gavdos/laas tiles are byte-identical to before.
+       */
+      overview?: boolean;
+      /**
+       * Crete land mask (r = land/sea at worldSize res). When present the terrain
+       * is clipped at the coastline (sea-side fragments discarded) so the map ends
+       * at the coast and the ocean shows beyond. Default absent → no clip.
+       */
+      landMaskTex?: StorageTexture | null;
     } = {},
   ) {
     this.hf = hf;
@@ -141,7 +161,7 @@ export class TerrainTiles {
     const wpos = mix(wpos0, snapped, morphK);
 
     // instance + object matrices are identity → positionNode is world space
-    const skirtDrop = isSkirt.mul(tileSize.mul(0.045).add(2.5));
+    const skirtDrop = isSkirt.mul(tileSize.mul(0.038).add(1.8)); // tuned skirt for crack-free at high tile update speed + close perfectiles
     const hSample = hf.sampleHeightFrom(heightBuf, wpos).sub(skirtDrop);
 
     // --- micro-displacement (5×-detail / Pillar A): geometric relief ≤85 m.
@@ -168,23 +188,37 @@ export class TerrainTiles {
       .mul(clamp(float(DISP.fade1).sub(camD).div(DISP.fade1 - DISP.fade0), 0, 1));
     const noiseA = hf.noiseA as NonNullable<typeof hf.noiseA>;
     const noiseB = hf.noiseB as NonNullable<typeof hf.noiseB>;
-    const f1 = texture(noiseA, wpos.div(DISP.sF1 * PERIOD_FBM), 0)
-      .y.mul(2)
-      .sub(1);
-    const f2 = texture(noiseA, wpos.div(DISP.sF2 * PERIOD_VAL).add(vec2(0.31, 0.77)), 0)
-      .x.mul(2)
-      .sub(1);
+    // fast fBm micro detail ONLY near camera (perf + sharper closeups for perfectile)
+    const nearMicro = camD.lessThan(140);
+    const f1 = select(nearMicro, texture(noiseA, wpos.div(DISP.sF1 * PERIOD_FBM), 0).y.mul(2).sub(1), float(0));
+    const f2 = select(nearMicro, texture(noiseA, wpos.div(DISP.sF2 * PERIOD_VAL).add(vec2(0.31, 0.77)), 0).x.mul(2).sub(1), float(0));
     // ridged creases (1−|n| sharp valleys) carry the "rock" read — weighted
     // toward rock faces, soft elsewhere
-    const r1 = texture(noiseB, wpos.div(DISP.sRid * PERIOD_RID), 0)
-      .z.mul(2)
-      .sub(1);
+    const r1 = select(nearMicro, texture(noiseB, wpos.div(DISP.sRid * PERIOD_RID), 0).z.mul(2).sub(1), float(0));
     const disp = f1
       .mul(DISP.wF1)
       .add(f2.mul(DISP.wF2))
       .add(r1.mul(rockK.mul(1 - DISP.ridBase).add(DISP.ridBase)).mul(DISP.wRid))
       .mul(dispAmp);
-    mat.positionNode = vec3(wpos.x, hSample.add(disp), wpos.y);
+    // Crete beach: cheap wave micro displacement on sand (PBR + silhouette).
+    // Matches the normal perturbation in TerrainMaterial. Fast, sin+val only.
+    const BEACH_MAX_D = 9.0;
+    const bH = smoothstep(BEACH_MAX_D, 0.8, hSample);
+    const bS = smoothstep(0.38, 0.08, nsV.w);
+    const bW = bH.mul(bS);
+    const ph = wpos.x.add(wpos.y.mul(0.7)).mul(0.0035);
+    const ru = sin(time.mul(0.55).add(ph))
+      .add(sin(time.mul(0.55 * 1.7).add(ph.mul(1.6)).add(2.1)).mul(0.55))
+      .add(sin(time.mul(0.55 * 2.6).add(ph.mul(0.7)).add(4.3)).mul(0.35));
+    const eff = ru.clamp(-1.6, 1.6);
+    const waveK = bW.mul(0.065).mul(smoothstep(eff.add(0.3), eff.sub(1.6), hSample).add(0.2));
+    const wv = texture(noiseA, wpos.div(0.29 * PERIOD_FBM), 0).y.mul(2).sub(1)
+      .mul(sin(time.mul(1.25).add(ph.mul(0.9))).mul(0.55).add(0.7));
+    // Ocean Gerstner sync for beach wave physics (matches water + terrain beach runup)
+    const og = sin(wpos.x.mul(0.006).add(time.mul(0.48))).mul(0.7)
+      .add(sin(wpos.x.mul(0.006*1.65).add(time.mul(0.48*1.65))).mul(0.35));
+    const waveDisp = wv.mul(waveK).add(og.mul(bW).mul(0.08));
+    mat.positionNode = vec3(wpos.x, hSample.add(disp).add(waveDisp), wpos.y);
     // shadow casting: skip the morph + bilinear (4 reads → 1); cascade texels
     // are meters wide, normalBias absorbs the nearest-fetch steps
     mat.castShadowPositionNode = vec3(
@@ -196,17 +230,29 @@ export class TerrainTiles {
     const shading = buildTerrainShading({
       normalTex: hf.normalTex,
       biomeTex: hf.biomeTex as NonNullable<typeof hf.biomeTex>,
+      satelliteTex: hf.satelliteTex,
+      satWin: hf.satWin,
+      satDetailTex: hf.satDetailTex,
+      satDetailWin: hf.satDetailWin,
       fieldsTex: hf.fieldsTex as NonNullable<typeof hf.fieldsTex>,
       noiseA: hf.noiseA as NonNullable<typeof hf.noiseA>,
       noiseB: hf.noiseB as NonNullable<typeof hf.noiseB>,
       mp: hf.mp,
       far: false,
+      overview: opts.overview ?? false,
       roadMaskTex: opts.roadMaskTex ?? null,
+      landMaskTex: opts.landMaskTex ?? null,
     });
     mat.colorNode = shading.colorNode;
     mat.normalNode = shading.normalNode;
     mat.roughnessNode = shading.roughnessNode;
     mat.metalnessNode = float(0);
+    // Crete coast cut: clip the terrain on the sea side of the land mask so the
+    // map ends exactly at the coastline; the ocean (with waves) shows beyond.
+    if (shading.coastCutNode) {
+      mat.opacityNode = shading.coastCutNode;
+      mat.alphaTest = 0.5;
+    }
     // Phase 6 water response (near tiles only): capillary-wet band hugging
     // the true waterline (the splat's moisture wetness is sim-res blurry)
     // + animated caustics on submerged beds. d = water column above the
@@ -366,11 +412,16 @@ export class TerrainTiles {
     const farShading = buildTerrainShading({
       normalTex: hf.normalTex,
       biomeTex: hf.biomeTex as NonNullable<typeof hf.biomeTex>,
+      satelliteTex: hf.satelliteTex,
+      satWin: hf.satWin,
+      satDetailTex: hf.satDetailTex,
+      satDetailWin: hf.satDetailWin,
       fieldsTex: hf.fieldsTex as NonNullable<typeof hf.fieldsTex>,
       noiseA: hf.noiseA as NonNullable<typeof hf.noiseA>,
       noiseB: hf.noiseB as NonNullable<typeof hf.noiseB>,
       mp: hf.mp,
       far: true,
+      overview: opts.overview ?? false,
       baseNormalSlope: farNS,
     });
     farMat.colorNode = farShading.colorNode;
@@ -450,14 +501,44 @@ export class TerrainTiles {
   update(camera: PerspectiveCamera): void {
     const cx = camera.position.x;
     const cz = camera.position.z;
-    if (Math.hypot(cx - this.lastCamX, cz - this.lastCamZ) < 20 && this.activeTiles > 0) return;
+    // larger threshold + world-size adaptive: fewer rebuilds on huge crete (2x faster tile updates)
+    const moveThresh = Math.max(32, worldSize() / 8000);
+    if (Math.hypot(cx - this.lastCamX, cz - this.lastCamZ) < moveThresh && this.activeTiles > 0) return;
     this.lastCamX = cx;
     this.lastCamZ = cz;
+
+    // frustum + simple occlusion culling (follows three.js fundamentals: prune before emit)
+    this._pv.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    this._frustum.setFromProjectionMatrix(this._pv);
+    // camera forward from matrixWorld (col-major; third column is local Z; negate for +forward)
+    const viewDirX = -camera.matrixWorld.elements[8];
+    const viewDirZ = -camera.matrixWorld.elements[10];
+    // conservative sphere radius for a tile
+    const tileCull = (ox: number, oz: number, size: number): boolean => {
+      const r = size * 0.75 + 80; // conservative
+      const dx = ox - cx;
+      const dz = oz - cz;
+      const d2 = dx * dx + dz * dz;
+      if (d2 > (camera.far + r) * (camera.far + r)) return false;
+      // cheap behind-camera occlusion cull (occlusion proxy)
+      const dot = dx * viewDirX + dz * viewDirZ;
+      if (dot < -r * 0.8) return false; // behind cam roughly
+      // frustum test: center + 4 corners (fast path, three.js Frustum)
+      const hs = size * 0.5;
+      const pts: Array<[number, number]> = [[ox, oz], [ox - hs, oz - hs], [ox + hs, oz - hs], [ox - hs, oz + hs], [ox + hs, oz + hs]];
+      for (let i = 0; i < pts.length; i++) {
+        const [px, pz] = pts[i] as [number, number];
+        this._cullVec.set(px, 0, pz);
+        if (this._frustum.containsPoint(this._cullVec)) return true;
+      }
+      return false; // all out
+    };
 
     let n = 0;
     const data = this.tileData;
     const emit = (ox: number, oz: number, size: number, lod: number): void => {
       if (n >= MAX_TILES) return;
+      if (!tileCull(ox, oz, size)) return; // frustum+occl cull before write
       data[n * 4] = ox;
       data[n * 4 + 1] = oz;
       data[n * 4 + 2] = size;
@@ -466,6 +547,8 @@ export class TerrainTiles {
     };
     const cy = camera.position.y;
     const recurse = (ox: number, oz: number, size: number, lod: number): void => {
+      // early frustum prune for entire subtree (perf)
+      if (!tileCull(ox, oz, size)) return;
       const dx = Math.max(Math.abs(cx - ox) - size / 2, 0);
       const dz = Math.max(Math.abs(cz - oz) - size / 2, 0);
       // 3D distance: from high altitude the ground straight below does not

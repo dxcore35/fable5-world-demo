@@ -12,3 +12,7 @@ shots/*
 # gavdos data (rebuild: bunx tsx tools/gavdos/build-data.ts --stage=all)
 public/gavdos/*.bin
 public/gavdos/*.jpg
+
+# crete beach photos — a symlink to third-party/copyrighted imagery; not republished
+# (committing the symlink would also leak a local path). beaches.json metadata IS kept.
+public/crete/beaches

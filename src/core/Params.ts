@@ -1,8 +1,8 @@
 /** URL parameter parsing — every run is fully described by its URL. */
 
 export type QualityPreset = 'low' | 'high' | 'ultra';
-/** world source: 'laas' = fully procedural (default), 'gavdos' = real DEM */
-export type WorldSource = 'laas' | 'gavdos';
+/** world source: 'laas' = fully procedural (default), 'gavdos' / 'crete' = real DEM */
+export type WorldSource = 'laas' | 'gavdos' | 'crete';
 
 export interface LaasParams {
   /** world seed — reproduces the entire world */
@@ -25,6 +25,8 @@ export interface LaasParams {
   dpr: number | null;
   /** world source: 'laas' (procedural, default) or 'gavdos' (real DEM) */
   world: WorldSource;
+  /** enable Nanite cluster-LOD renderer for Chania buildings (?nanite=1) */
+  nanite: boolean;
 }
 
 function num(v: string | null, fallback: number): number {
@@ -40,7 +42,8 @@ export function parseParams(search: string = window.location.search): LaasParams
     presetRaw === 'low' || presetRaw === 'ultra' ? presetRaw : 'high';
   const shotN = num(q.get('shot'), 0);
   const worldRaw = q.get('world') ?? 'laas';
-  const world: WorldSource = worldRaw === 'gavdos' ? 'gavdos' : 'laas';
+  const world: WorldSource =
+    worldRaw === 'gavdos' ? 'gavdos' : worldRaw === 'crete' ? 'crete' : 'laas';
   return {
     seed: Math.floor(num(q.get('seed'), 1)) >>> 0,
     scene: q.get('scene') ?? 'world',
@@ -53,6 +56,7 @@ export function parseParams(search: string = window.location.search): LaasParams
     freeze: q.get('freeze') === '1',
     dpr: q.get('dpr') !== null ? num(q.get('dpr'), 1) : null,
     world,
+    nanite: q.get('nanite') === '1',
   };
 }
 

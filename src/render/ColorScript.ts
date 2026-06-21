@@ -28,6 +28,8 @@ const KEYFRAMES: Keyframe[] = [
   { t: 6.2, whiteBalance: [1.05, 0.97, 0.95], shadowTint: [0.85, 0.95, 1.12], shadowAmt: 0.4, highlightTint: [1.12, 1.0, 0.88], highlightAmt: 0.32, saturation: 1.1, contrast: 1.05 },
   // morning/noon — vibrant but neutral; cool shadows
   { t: 11, whiteBalance: [1.0, 1.0, 1.0], shadowTint: [0.92, 0.98, 1.06], shadowAmt: 0.28, highlightTint: [1.04, 1.01, 0.96], highlightAmt: 0.16, saturation: 1.13, contrast: 1.07 },
+  // Aegean noon (Crete beaches): bright high-contrast, subtle teal sky / warm sand pop, filmic for Mediterranean glare
+  { t: 13.0, whiteBalance: [1.03, 1.0, 0.96], shadowTint: [0.88, 0.97, 1.09], shadowAmt: 0.22, highlightTint: [1.08, 1.02, 0.91], highlightAmt: 0.26, saturation: 1.18, contrast: 1.16 },
   { t: 15.5, whiteBalance: [1.01, 1.0, 0.99], shadowTint: [0.92, 0.98, 1.06], shadowAmt: 0.28, highlightTint: [1.05, 1.01, 0.95], highlightAmt: 0.18, saturation: 1.13, contrast: 1.07 },
   // golden — full teal–orange split per references
   { t: 19.0, whiteBalance: [1.09, 1.0, 0.9], shadowTint: [0.72, 0.91, 1.2], shadowAmt: 0.58, highlightTint: [1.22, 1.03, 0.8], highlightAmt: 0.5, saturation: 1.15, contrast: 1.1 },

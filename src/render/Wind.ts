@@ -152,7 +152,9 @@ export function vegWindOffset(a: WindVertexArgs): NV3 {
   const eks = e.mul(k).mul(farAtten);
 
   // 1) mean lean ∝ strength², modulated by the front field (slow)
-  const lean = s.mul(s).mul(g.mul(0.9).add(0.5)).mul(eks).mul(1.1).mul(prof);
+  // Aegean beach boost: low coastal shrubs catch more wind (natural motion on phrygana/olives)
+  const shoreBoost = float(1).add(a.origin.y.lessThan(18).select(0.22, 0)); // low h near beaches
+  const lean = s.mul(s).mul(g.mul(0.9).add(0.5)).mul(eks).mul(1.1).mul(prof).mul(shoreBoost);
 
   // 2) sway at the per-instance natural frequency; gusts scale AMPLITUDE
   const fJit = a.instPhase.mul(7.31).fract();
@@ -182,7 +184,7 @@ export function vegWindOffset(a: WindVertexArgs): NV3 {
     .sub(d.mul(time.mul(4.5)))
     .div(6 * PERIOD_FBM);
   const fl = texture(ctx.noiseA, pF, 0) as unknown as NV4;
-  const flutA = s.mul(g.mul(0.7).add(0.3)).mul(eks).mul(flex).mul(0.07).mul(flutAtten);
+  const flutA = s.mul(g.mul(0.7).add(0.3)).mul(eks).mul(flex).mul(0.07).mul(flutAtten).mul(shoreBoost);
   const flutD = fl.z.clamp(-1.2, 1.2).mul(flutA);
   const flutP = fl.w.clamp(-1.2, 1.2).mul(flutA);
 

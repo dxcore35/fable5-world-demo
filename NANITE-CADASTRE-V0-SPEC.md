@@ -72,11 +72,14 @@ typings, JS, and embedded WASM. The **only** gap is `meshopt_partitionClusters` 
 that defines DAG quality): verified absent from JS *and* the embedded WASM (`grep partition` = 0 hits;
 export tables dumped).
 
-**Resolution (chosen):** compile a ~50–100 KB WASM from zeux/meshoptimizer's MIT C source that additionally
-exports `meshopt_partitionClusters` (the repo's own `js/` build script already produces the shipped blobs —
-add one symbol to `-sEXPORTED_FUNCTIONS`). Load it from the bun bake tool alongside the npm package, which
-handles everything else. Bake is offline, so a one-time native/wasm dependency is acceptable and keeps us on
-the battle-tested algorithm. (Pure-JS graph-partition fallback exists but risks DAG quality — not chosen.)
+**Resolution (chosen for v0 — pure-JS grouping):** an environment probe (2026-06-20) found **no emscripten and
+Apple clang lacks a `wasm32` target**, so building a custom `partitionClusters` WASM is deferred. v0 instead
+emulates `partitionClusters` in pure TypeScript: build the meshlet-adjacency graph (meshlets sharing vertices →
+weighted edge) and group adjacent meshlets into ~8–32-cluster buckets via greedy BFS region-grow seeded by
+`buildMeshletsSpatial`'s spatial order. Everything else (buildMeshlets, `simplifyWithAttributes` with the
+shared-edge `vertex_lock` mask, `Permissive`/`ErrorAbsolute`/`Sparse` flags) uses the present `meshoptimizer@1.1.1`
+JS package. **v1 upgrade** (if grouping quality shows cracks): the real `meshopt_partitionClusters` via a native
+dylib called through `bun:ffi` (Apple clang builds arm64 natively) or an emscripten WASM build.
 
 ### 4.2 three r184 can't rebuild an index buffer on GPU → use a single instanced indirect draw
 three r184 **already** does GPU-driven **indexed-indirect hardware** drawing (`WebGPUBackend.drawIndexedIndirect`;
@@ -187,9 +190,10 @@ today). Bake stores world-space positions; runtime applies camera-relative proje
 
 ## 12. Risks & Open Questions
 
-- **Custom WASM build step** adds a one-time toolchain dependency (emscripten/clang). Mitigation: vendor the
-  prebuilt `.wasm`; document the rebuild. *(Open: confirm emscripten is available on this machine, else use a
-  native CLI / gltfpack shell-out.)*
+- **Meshlet grouping quality (pure-JS v0)** — RESOLVED for v0: no emscripten / clang-wasm on this machine, so
+  v0 ships a pure-TS BFS grouping instead of `meshopt_partitionClusters`. Risk: weaker grouping locality can
+  cause LOD cracks/pops. Mitigation: validate visually on Chania; v1 upgrade to real `partitionClusters` via
+  `bun:ffi` native dylib or emscripten WASM if needed.
 - **DAG quality on tiny/disjoint building parts** — `partitionClusters` v1.1 handles disconnected clusters;
   validate on Chania's sparser footprints.
 - **Single-draw throughput** — v0 issues **one** instanced draw (one instance per surviving cluster, fixed

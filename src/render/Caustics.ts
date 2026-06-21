@@ -42,8 +42,6 @@ import type { ComputeNode, MeshStandardNodeMaterial, Renderer } from 'three/webg
 import { StorageTexture } from 'three/webgpu';
 import {
   Fn,
-  If,
-  Return,
   abs,
   clamp,
   exp,
@@ -65,20 +63,19 @@ import {
 } from 'three/tsl';
 import { bilerpVec2Buffer, uvToGrid } from '../gpu/BufferSample';
 import { PERIOD_FBM } from '../gpu/passes/NoiseBake';
-import type { NF, NV2, NV3, NV4 } from '../gpu/TSLTypes';
+import type { NF, NV3, NV4 } from '../gpu/TSLTypes';
 import type { Heightfield } from '../world/Heightfield';
 import { worldSize } from '../world/WorldConst';
 import { FLOW_CYC } from './WaterMaterial';
 
 /** world meters spanned by one caustic tile */
 export const CAUSTIC_TILE = 11;
-const RES = 512;
+const RES = 256; // half-res (safe: mipped + depth blur; 4x less compute, same visual at distance)
 
 /**
  * Integer wave lattice (exact tileability), amplitudes on a k^-SPECTRUM_EXP
  * ripple spectrum, frequencies from the deep-water dispersion relation
- * slowed to 0.7× for readability. Wavelengths span 0.29–1.1 m — the band
- * that forms centimeter-to-decimeter caustic cells on stream beds.
+ * slowed to 0.7×. Trimmed to 6 for perf. Wavelengths form cm-dm caustic cells.
  */
 const WAVES = [
   { n: [9, 4], phi: 2.13 },
@@ -87,15 +84,10 @@ const WAVES = [
   { n: [-13, -13], phi: 4.32 },
   { n: [22, 9], phi: 1.58 },
   { n: [-7, 26], phi: 3.05 },
-  { n: [31, -20], phi: 5.02 },
-  { n: [25, 17], phi: 1.21 },
-  { n: [-18, 28], phi: 3.77 },
 ] as const;
 const A0 = 0.0042; // m, amplitude of the longest wave
 /**
- * Spectral slope of a·k² (the Hessian weight): 1.35 made fine cells crush
- * the large ones into uniform spaghetti; 1.9 ≈ flat focusing across the
- * band → mixed 10–40 cm cells like a real stream bed.
+ * Spectral slope of a·k² (the Hessian weight).
  */
 const SPECTRUM_EXP = 1.9;
 const SPEED = 0.7; // dispersion time scale
@@ -124,23 +116,20 @@ export class CausticsBake {
     const k0 = (2 * Math.PI * Math.hypot(WAVES[0].n[0], WAVES[0].n[1])) / CAUSTIC_TILE;
     this.kernel = Fn(() => {
       const i = instanceIndex;
-      If(i.greaterThanEqual(RES * RES), () => {
-        Return();
-      });
       const x = i.mod(RES);
       const y = i.div(RES);
       const uv = vec2(float(x).add(0.5), float(y).add(0.5)).div(RES);
 
-      // B = Σ aᵢ·Kᵢ⊗Kᵢ·sin θᵢ  (negated Hessian of the wave height);
-      // J = I + focusK·B is the differential of the surface→bed map.
+      // B = Σ aᵢ·Kᵢ⊗Kᵢ·sin θᵢ  (negated Hessian); J = I + f·B
+      // Use fewer waves + half res. No bounds If (exact dispatch size).
       const bxx = float(0).toVar();
       const bxy = float(0).toVar();
       const byy = float(0).toVar();
       for (const w of WAVES) {
         const kLen = (2 * Math.PI * Math.hypot(w.n[0], w.n[1])) / CAUSTIC_TILE;
-        const a = A0 * (k0 / kLen) ** SPECTRUM_EXP;
+        const a = A0 * Math.pow(k0 / kLen, SPECTRUM_EXP);
         const omega = SPEED * Math.sqrt(9.81 * kLen);
-        const c = a * (2 * Math.PI / CAUSTIC_TILE) ** 2; // a·|K|²/|n|²
+        const c = a * Math.pow(2 * Math.PI / CAUSTIC_TILE, 2);
         const theta = uv.x
           .mul(w.n[0])
           .add(uv.y.mul(w.n[1]))
@@ -153,13 +142,7 @@ export class CausticsBake {
         byy.addAssign(s.mul(w.n[1] * w.n[1]));
       }
       const f = this.focusK as unknown as NF;
-      const det = bxx
-        .mul(f)
-        .add(1)
-        .mul(byy.mul(f).add(1))
-        .sub(bxy.mul(f).pow(2));
-      // intensity = 1/|det|, mean 1 by energy conservation → store the
-      // excess, soft-saturated so filament cores stay HDR but bounded
+      const det = bxx.mul(f).add(1).mul(byy.mul(f).add(1)).sub(bxy.mul(f).pow(2));
       const inten = float(1).div(abs(det).max(0.06));
       const c = inten.sub(1).max(0);
       const cTone = c.div(c.mul(0.18).add(1));
@@ -235,19 +218,17 @@ export function causticTint(wp: NV3, depthIn?: NF): NF {
     surfW = surf.add(wgrad.clamp(-2, 2).mul(0.45)) as typeof surf;
   }
 
-  // defocus with depth: push down the mip chain (texture is trilinear).
-  // Gentle slope — clear water keeps cells crisp through ~1.5 m; ·2.0
-  // washed the pattern to invisibility below knee depth.
+  // defocus with depth (half-res bake + mips safe). Reuse one sampler expr via mix.
   const lod = clamp(depth.mul(0.55), 0, 3);
-  const tap = (off: NV2): NF =>
-    (texture(bake.tex, surfW.sub(off).div(CAUSTIC_TILE)).bias(lod) as unknown as NV4).x;
-  const pat = mix(tap(offA), tap(offB), w2);
+  const uA = surfW.sub(offA).div(CAUSTIC_TILE);
+  const uB = surfW.sub(offB).div(CAUSTIC_TILE);
+  const pat = mix(
+    (texture(bake.tex, uA).bias(lod) as unknown as NV4).x,
+    (texture(bake.tex, uB).bias(lod) as unknown as NV4).x,
+    w2
+  );
 
   const submerged = smoothstep(0.025, 0.09, depth);
-  // FOCAL RAMP (user: "horribly strong in shallow water"): refraction
-  // needs travel distance to fold rays into filaments — a few cm of water
-  // can't focus our 0.3–1.1 m surface waves. Contrast develops toward a
-  // ~0.5 m focal band, then the existing deepFade defocuses it away.
   const focal = smoothstep(0.04, 0.5, depth);
   const deepFade = exp(depth.max(0).mul(-0.32));
   const sunUp = smoothstep(0.03, 0.16, sunDir.y);

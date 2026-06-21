@@ -430,8 +430,8 @@ export class GroundRing {
       const wc = worldCell(sx, sy, GRASS_GRID, GRASS_CELL);
       const jit = cellHash2(wc, salt);
       const wpos = wc.add(jit).mul(GRASS_CELL);
-      const dist = wpos.sub(vec2(camU.x, camU.z)).length();
-      If(dist.greaterThan(GRASS_R), () => {
+      const distH = wpos.sub(vec2(camU.x, camU.z)).length();
+      If(distH.greaterThan(GRASS_R), () => {
         Return();
       });
       const uvW = wpos.div(worldSize()).add(0.5);
@@ -474,18 +474,32 @@ export class GroundRing {
       // (Pillar A) — thin dry blades survive even on poor soil. Hard gates
       // (water, snow, steep rock) still apply below.
       dens = dens.max(
-        float(0.3).mul(float(1).sub(smoothstep(8, 14, dist))).mul(bank),
+        float(0.3).mul(float(1).sub(smoothstep(8, 14, distH))).mul(bank),
       );
       dens = dens
         .mul(float(1).sub(bio.y.mul(0.95)))
         .mul(float(1).sub(smoothstep(0.55, 0.95, ns.w)));
+      // Detail metric = TRUE distance to the camera (includes height), not the
+      // horizontal footprint. A blade's on-screen size — hence the LOD it needs
+      // and how hard to thin it — tracks how far the EYE is, so looking DOWN
+      // from altitude coarsens/thins the carpet exactly as backing away does.
+      // Coverage EXTENT stays horizontal (GRASS_R gate + edge): grass still
+      // fills the ground out to the ring; only per-blade detail follows
+      // perspective. THIS dissolves the sub-pixel blade swarm (shimmer/moiré —
+      // too many blades crammed into one pixel) that high cameras produce.
+      const dist = vec3(wpos.x, h, wpos.y).sub(camU).length();
       // coverage-conserving continuous LOD ("cheap nanite for aggregates"):
       // accept thins SMOOTHLY with distance — survivors widen by 1/sqrt(thin)
       // in the vertex stage, so screen coverage stays constant and there are
       // no density bands; the ring then dissolves into the field-matched
       // terrain splat instead of ending at an edge.
       const thin = grassThin(dist);
-      const edge = float(1).sub(smoothstep(GRASS_R * 0.9, GRASS_R, dist));
+      // Long, gentle outer taper (was 0.9→1.0 of R, a hard rim). With the
+      // terrain sward now colour-matched to the blades, the fine ring can fade
+      // over ~50 m so its boundary dissolves instead of reading as a disc edge;
+      // the far super-tufts carry the silhouette beyond. distH (horizontal) so
+      // the taper is a ground ring, independent of camera altitude.
+      const edge = float(1).sub(smoothstep(GRASS_R * 0.68, GRASS_R, distH));
       If(cellHash(wc, salt ^ 0x77a1).greaterThanEqual(dens.mul(edge).mul(thin)), () => {
         Return();
       });
@@ -792,7 +806,12 @@ export class GroundRing {
     // patch-level (≈1.6 m) dryness/hue so meadows read as drifts, not noise
     const patch = cellHash2(wc.mul(0.125).floor(), bind.salt ^ 0x3333);
     const tilt = cellHash2(wc, bind.salt ^ 0x4545).sub(0.5).mul(0.5);
-    const dist = wpos.sub(vec2(cameraPosition.x, cameraPosition.z)).length();
+    // Detail distance = TRUE camera distance (height-aware), matching the cull
+    // kernel exactly. widen = 1/sqrt(thin) conserves coverage and bandFade picks
+    // the LOD — both MUST read the same metric the cull thinned by, or the
+    // carpet tears at the bands. Full 3D distance makes perspective + camera
+    // altitude (not just ground footprint) drive blade size and density.
+    const dist = vec3(wpos.x, y, wpos.y).sub(cameraPosition).length();
     // width compensation for the continuous thinning — coverage conserved.
     // far mode: coarse-grid super-tufts have their own fixed footprint
     const widen = far
@@ -807,11 +826,26 @@ export class GroundRing {
     const yawA = h2.y.mul(6.2831853);
     const c = yawA.cos();
     const s = yawA.sin();
+    // Per-instance silhouette break (anti-tiling): only TWO clump meshes and a
+    // tuft card are instanced across the WHOLE field, so without this every
+    // clump is the same shape and the eye locks onto the repeat — that is the
+    // "pattern when many sit next to each other". A fresh per-cell hash gives
+    // each instance its own footprint depth (aspect) and a signed static bow
+    // (curl) on top of the existing yaw/height/width/lean, so no two read as
+    // congruent. Cheap: pure vertex math off one extra hash, and because it
+    // lives in positionNode the depth-prepass twin inherits it unchanged.
+    const sh = cellHash2(wc, bind.salt ^ 0x2b7d);
+    const aspect = far ? float(1) : sh.x.mul(0.6).add(0.7); // 0.7..1.3 depth
     const ls = positionLocal.mul(
-      vec3(widen.mul(tuft ? 1.5 : 1.15), bladeH, 1),
+      vec3(widen.mul(tuft ? 1.5 : 1.15), bladeH, aspect),
     );
-    const rx = ls.x.mul(c).add(ls.z.mul(s));
-    const rz = ls.z.mul(c).sub(ls.x.mul(s));
+    // signed static bow: arcs the blade/card forward-or-back by a per-instance
+    // amount that grows toward the tip (tip², like a real bent culm). Separate
+    // from wind, which animates on top of this already-varied rest pose.
+    const bow = sh.y.sub(0.5).mul(far ? 0.45 : 0.7).mul(bladeH);
+    const lz = ls.z.add(bow.mul(positionLocal.y.mul(positionLocal.y)));
+    const rx = ls.x.mul(c).add(lz.mul(s));
+    const rz = lz.mul(c).sub(ls.x.mul(s));
     // wind: cantilever bend (tip²) riding the traveling gust field + a fine
     // per-blade shimmer; tips dip as they deflect. Same field as the trees
     // (Wind.ts) so meadow waves and canopy surges line up.

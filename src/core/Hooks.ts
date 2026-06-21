@@ -63,6 +63,10 @@ export interface LaasHooks {
   settle: ((frames?: number) => Promise<void>) | null;
   /** enable/disable fly-camera input (flythrough takes the wheel) */
   flyCamEnabled: ((on: boolean) => void) | null;
+  /** switch the detected-coastline source at runtime (crete): cadastre / osm / off.
+   *  Switches BOTH the ocean trim (land mask) and the cyan overlay line; set by the
+   *  scene after the land mask + overlay exist. */
+  setCoastlineSource?: ((s: 'cadastre' | 'osm' | 'off') => void) | null;
 }
 
 declare global {

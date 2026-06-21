@@ -283,7 +283,7 @@ export async function captureImpostor(
     t.generateMipmaps = true;
     t.minFilter = LinearMipmapLinearFilter;
     t.magFilter = LinearFilter;
-    t.anisotropy = 4;
+    t.anisotropy = 8; // sharper distant foliage + beach veg at angle; fewer alias taps + realism
     t.needsUpdate = true;
     return t;
   };

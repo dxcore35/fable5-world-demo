@@ -39,7 +39,8 @@ import { captureImpostor, type ImpostorAtlas } from '../vegetation/Impostors';
 import { buildRock } from '../vegetation/RockBuilder';
 import { buildTree, type HeroDiet } from '../vegetation/TreeBuilder';
 import { buildShrub } from '../vegetation/Understory';
-import type { GrowthInstance, SpeciesParams } from '../vegetation/VegTypes';
+import type { SpeciesParams } from '../vegetation/VegTypes';
+import { perturbSpecies, variantInstance } from './GavdosTreeVariation';
 import type { VegLib, PoolPart, VegPool } from '../vegetation/VegLibrary';
 import {
   GAVDOS_JUNIPER,
@@ -94,16 +95,8 @@ function bounds(geos: BufferGeometry[]): { height: number; radius: number } {
   return { height, radius };
 }
 
-function variantInstance(seed: WorldSeed, id: string, v: number): Partial<GrowthInstance> {
-  const vr = seed.rng(`gavdosveg/${id}/${v}`);
-  return {
-    leanX: (vr.float() - 0.5) * 0.18,
-    leanZ: (vr.float() - 0.5) * 0.18,
-    biasX: (vr.float() - 0.5) * 1.8,
-    biasZ: (vr.float() - 0.5) * 1.8,
-    age: 0.65 + vr.float() * 0.35,
-  };
-}
+// Per-variant shape & canopy diversity lives in GavdosTreeVariation (shared with
+// the headless verify/render tools so what ships is what gets inspected).
 
 // ---------------------------------------------------------------------------
 // buildGavdosVegLibrary
@@ -192,14 +185,18 @@ export async function buildGavdosVegLibrary(
     for (let v = 0; v < TREE_VARIANTS; v++) {
       const label = `gavdosveg/${sp.id}/${v}`;
       const inst = variantInstance(seed, sp.id, v);
-      const t0 = buildTree(sp, seed.rng(label), {
+      // Per-variant morphological diversity: grow from a jittered clone of the
+      // species params so each variant has a distinct silhouette (proportions,
+      // branch posture, gnarl, occasional storm-broken top).
+      const psp = perturbSpecies(sp, seed.rng(`${label}/shape`));
+      const t0 = buildTree(psp, seed.rng(label), {
         lod: 0,
         inst,
         foliageMode: 'hybrid',
         hero: GAVDOS_HERO_DIETS[sp.id] ?? { cardTarget: 1200, meshAnchorTarget: 1000 },
       });
-      const t1 = buildTree(sp, seed.rng(label), { lod: 1, inst });
-      const t2 = buildTree(sp, seed.rng(label), { lod: 2, inst });
+      const t1 = buildTree(psp, seed.rng(label), { lod: 1, inst });
+      const t2 = buildTree(psp, seed.rng(label), { lod: 2, inst });
       const r0 = treeParts(sp, t0);
       if (t0.foliageMesh) {
         r0.push({

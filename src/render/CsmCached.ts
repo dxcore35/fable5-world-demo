@@ -10,15 +10,16 @@
  * from the light pose, so a moved light with a cached map would translate
  * every shadow on screen (swimming). Forced refresh when:
  *   - the sun direction changes (ToD edit) → all cascades,
- *   - the would-be fit center drifts > 4% of the cascade span (fast camera
+ *   - the would-be fit center drifts > DRIFT_FRAC of the cascade span (fast camera
  *     motion / teleport; the per-frame fit is a texel-snapped translation
  *     of a rotation-invariant square, so center drift captures all of it),
  *   - updateFrustums() runs (resize / camera change → extents change).
  *
  * Quality: near cascade refreshes every frame (wind sway in contact
- * shadows stays live); c1 at /2 (≥30 Hz at 60 fps), c2 /3, c3 /6 — far
- * cascades hold mostly-rigid content (impostor-band proxies, terrain) and
- * their texels are 1–10 m wide; a few frames of latency is sub-texel.
+ * shadows stays live); c1 at /2 (≥30 Hz at 60 fps), c2 /4, c3 /10 — far
+ * cascades hold mostly-rigid content (terrain proxy + macro mountains) and
+ * their texels are tens of meters wide on 280 km Crete; several frames latency
+ * is invisible sub-texel. Extreme perf win: far cascades rarely rasterize.
  */
 
 import { Box3, Matrix4, Vector3 } from 'three';
@@ -26,10 +27,10 @@ import { CSMFrustum } from 'three/addons/csm/CSMFrustum.js';
 import { CSMShadowNode } from 'three/addons/csm/CSMShadowNode.js';
 import type { Camera, Light, Object3D } from 'three/webgpu';
 
-const PERIODS = [1, 2, 3, 6];
-const PHASES = [0, 1, 2, 5];
+const PERIODS = [1, 2, 4, 10]; // adaptive: near live (wind/veg), far update rarely — far spans ~100 km on Crete, content rigid
+const PHASES = [0, 1, 3, 7]; // stagger to avoid piling far updates
 /** fraction of the cascade span the fit center may drift before a forced refresh */
-const DRIFT_FRAC = 0.04;
+const DRIFT_FRAC = 0.035; // slightly tighter for large-world texel snapping stability on steep slopes
 
 const _lightDirection = new Vector3();
 const _lightOrientationMatrix = new Matrix4();

@@ -387,29 +387,28 @@ export class PostStack {
           return mix(mix(aoRaw, float(1), directK), float(1), k);
         })()
       : null;
-    // --- screen-space contact shadows (spec §2 floor) ---------------------------
+    // --- screen-space contact shadows (spec §2 floor) + GTAO synergy -----------
     // Short depth-buffer march toward the sun: picks up the ~0.1–2 m contact
-    // occlusion the 2048² cascades can't resolve. Near field only; floored so
-    // it stays a contact CUE (never pitch black — no-black-shadows law).
-    const SSCS_STEPS = 12;
+    // occlusion the cascades can't resolve on steep Crete slopes/crevices.
+    // Synergy with GTAO (1.6 m radius in half-res): contact = micro edges/grounding,
+    // GTAO = broader valley folds; both are floored + gated so deep shadow +
+    // AO never hits pure black on beaches/valleys (no-black law + photoreal).
+    // Reduced steps for TSL minimal cost on large-world frames.
+    const SSCS_STEPS = 8; // was 12; quadratic early-out + 8 taps still catches crevices
     const contactNode = Fn((): NF => {
       const result = float(1).toVar();
       const d = depthTex.x;
       const isSky = d.lessThanEqual(1e-7).or(d.greaterThanEqual(0.9999999));
       const viewPos = getViewPosition(screenUV, d, uProjInv);
       const dist = viewPos.length();
-      If(isSky.not().and(dist.lessThan(240)), () => {
+      If(isSky.not().and(dist.lessThan(280)), () => {
         const sunW = vec3(atmosphere.sunDir).normalize();
         const sunV = uView.mul(vec4(sunW, 0)).xyz;
         const jit = hash12(screenUV.mul(vec2(517.7, 893.3)).add(float(frameU).mul(0.7548)))
           .mul(0.8)
           .add(0.4);
-        const range = float(1.7);
-        // first-hit-wins early exit: the contribution 1−f·0.5 strictly
-        // DECREASES with step index, so once any step hits, later steps can
-        // never raise the max — identical output, and whole wavefronts skip
-        // the remaining taps (contact hits are spatially coherent). hitF
-        // sentinel 2 = no hit yet.
+        const range = float(2.2); // slightly larger to catch island crevices/rock undercuts
+        // first-hit-wins early exit...
         const hitF = float(2).toVar();
         for (let s = 1; s <= SSCS_STEPS; s++) {
           // quadratic step distribution: dense near the surface
@@ -425,16 +424,16 @@ export class PostStack {
             const dS = texture(depthTex.value, uvS).x;
             const bufV = getViewPosition(uvS, dS, uProjInv);
             const dz = bufV.z.sub(sampleV.z); // >0: buffer closer to camera
-            const hit = dz.greaterThan(0.05).and(dz.lessThan(1.4)).and(inFrame);
+            const hit = dz.greaterThan(0.04).and(dz.lessThan(2.0)).and(inFrame);
             If(hit, () => {
               hitF.assign(f);
             });
           });
         }
         const occl = hitF.lessThan(1.5).select(float(1).sub(hitF.mul(0.5)), float(0));
-        // distance fade + floor
-        const fade = smoothstep(240, 140, dist);
-        result.assign(float(1).sub(occl.mul(0.6).mul(fade)));
+        // distance fade + floor — lower max strength (0.45) so +GTAO stays realistic dark but never 0
+        const fade = smoothstep(280, 150, dist);
+        result.assign(float(1).sub(occl.mul(0.45).mul(fade)));
       });
       return result;
     })();

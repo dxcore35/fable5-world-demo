@@ -70,6 +70,13 @@ async function boot(): Promise<void> {
     params.world = 'gavdos';
   }
   registerScene('gavdos', buildTerrainScene);
+  // 'crete' = same render scene but with the whole-Crete baked DEM behind
+  // ?world=crete. The scene name implies the world source so `?scene=crete`
+  // boots the real island without a second param.
+  if (params.scene === 'crete' && params.world !== 'crete') {
+    params.world = 'crete';
+  }
+  registerScene('crete', buildTerrainScene);
 
   const ctx: WorldContext = {
     engine,

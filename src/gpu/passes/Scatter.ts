@@ -78,8 +78,9 @@ export const enum VegClass {
   Branch = 23, // fallen branches on forest floors → 230 m
 }
 
-/** structural variants baked per tree species (geometry reuse, D5) */
-export const TREE_VARIANTS = 4;
+/** structural variants baked per tree species (geometry reuse, D5).
+ *  Max 8 — instance idF packs as class·8 + variant (see encoding above). */
+export const TREE_VARIANTS = 6;
 
 export interface ScatterLayer {
   bufA: StorageBufferNode<'vec4'>;

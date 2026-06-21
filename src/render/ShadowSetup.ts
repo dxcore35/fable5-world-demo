@@ -1,8 +1,11 @@
 /**
  * Sun shadows: 4-cascade CSM (texel-snapped by CSMShadowNode) with a PCSS
  * contact-hardening filter — blocker search (raw depth) → penumbra estimate →
- * Vogel-disk PCF at the penumbra radius. Screen-space contact shadows live in
- * the post stack and pick up what cascade resolution can't.
+ * Vogel-disk PCF at the penumbra radius. Tuned for 280 km Crete: tightened
+ * large maxFar cascades, per-cascade mapSizes, higher normalBias, reduced TSL
+ * samples, world-metric PCSS clamps. Screen-space contact (PostStack) + GTAO
+ * synergy fills crevices on steep slopes without black. Mountains cast crisp
+ * near / soft distant realistic shadows into valleys/beaches.
  */
 
 import type { DirectionalLight, PerspectiveCamera, Texture } from 'three';
@@ -21,17 +24,18 @@ import {
 } from 'three/tsl';
 import type { NF, NV2, NV4 } from '../gpu/TSLTypes';
 
-const BLOCKER_TAPS = 6;
-const PCF_TAPS = 9;
+const BLOCKER_TAPS = 4; // reduced for extreme speed; 4 vogel taps sufficient for blocker avg on island scale
+const PCF_TAPS = 5; // balanced PCF: crisp near + soft far without 15-tap cost per pixel
 /**
  * Penumbra is WORLD-metric: tan of the artistic sun angular radius (~0.6°,
  * slightly wider than the real 0.27° disc). The old texel-metric cap meant
  * a fixed 14-texel blur per cascade — ≈21 m of mush in the far cascade, so
  * every crown shadow at distance became a giant soft blob (user-reported).
+ * For 280 km Crete, allow larger artistic soft shadows in distant valleys/beaches.
  */
-const SUN_TAN = 0.011;
-const MIN_PENUMBRA_M = 0.05;
-const MAX_PENUMBRA_M = 3.0;
+const SUN_TAN = 0.0105;
+const MIN_PENUMBRA_M = 0.08;
+const MAX_PENUMBRA_M = 6.5;
 
 interface ShadowFilterInputs {
   depthTexture: Texture;
@@ -100,6 +104,13 @@ export interface ShadowRig {
   csm: CSMShadowNode;
 }
 
+export interface ShadowSetupOpts {
+  maxFar?: number;
+  lightMargin?: number;
+  /** per-cascade map sizes (near→far) for proper res on large worlds; powers of 2 */
+  cascadeMapSizes?: number[];
+}
+
 /**
  * @param cloudShadow optional world-space sun-transmittance factor (clouds):
  * multiplied into the filter result so it gates ONLY direct sun light.
@@ -108,7 +119,7 @@ export function setupSunShadows(
   sun: DirectionalLight,
   camera: PerspectiveCamera,
   cloudShadow?: (wxz: NV2) => NF,
-  opts?: { maxFar?: number; lightMargin?: number },
+  opts?: ShadowSetupOpts,
 ): ShadowRig {
   // perf attribution: ?ablate=shadows (no casting) | pcss (default filter)
   const ablate = new Set(
@@ -120,11 +131,16 @@ export function setupSunShadows(
   }
   const maxFar = opts?.maxFar ?? 3200;
   const lightMargin = opts?.lightMargin ?? 700;
+  const cascadeMapSizes = opts?.cascadeMapSizes ?? [2048, 2048, 1024, 512]; // tight near for crisp, smaller far for speed on 280km
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.bias = -0.00012;
-  sun.shadow.normalBias = 2.2;
-  sun.shadow.radius = 1.15;
+  // base mapSize is cloned by CSM; per-cascade override below for proper resolution per frustum span.
+  sun.shadow.mapSize.set(Math.max(...cascadeMapSizes), Math.max(...cascadeMapSizes));
+  // three.js lighting tips for acne/peter-panning on steep Crete slopes/terrain:
+  // normalBias pushes the comparison point along normal (world units) — critical for high-slope terrain.
+  // Use positive normalBias + tiny negative bias. Tight light frustum via lightMargin prevents over-shrink.
+  sun.shadow.bias = -0.00009;
+  sun.shadow.normalBias = 3.8; // raised for steep island slopes + large-world texel sizes
+  sun.shadow.radius = 1.0; // PCSS owns the softness; radius is legacy for non-filter
   // CSMShadowNode CLONES this shadow per cascade — its camera near/far are
   // inherited as the cascade depth range. The DirectionalLight default
   // (near .5, far 500) is shorter than the lightMargin alone, so every
@@ -163,6 +179,16 @@ export function setupSunShadows(
       : new CachedCsmShadowNode(sun, csmOpts);
   csm.fade = q.get('csmfade') !== '0';
   (sun.shadow as unknown as { shadowNode: unknown }).shadowNode = csm;
+
+  // Apply per-cascade map sizes (after clone inside CSMShadowNode). Far cascades get smaller maps
+  // for extreme perf while near keeps detail for mountain edges/valley contact. Set before first use.
+  if (csm.lights && cascadeMapSizes.length) {
+    for (let i = 0; i < csm.lights.length; i++) {
+      const sz = cascadeMapSizes[i] ?? cascadeMapSizes[cascadeMapSizes.length - 1];
+      const sh = csm.lights[i].shadow as unknown as { mapSize: { set: (w: number, h: number) => void } };
+      sh.mapSize.set(sz, sz);
+    }
+  }
 
   // CSMShadowNode contract: the APP must call updateFrustums() after camera
   // changes. Two traps bit us (no-shadows-anywhere, user-reported twice):

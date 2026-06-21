@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "clusterCount": 1943,
+  "levelCount": 11,
+  "levels": [
+    {
+      "clusterCount": 961,
+      "triCount": 122952
+    },
+    {
+      "clusterCount": 497,
+      "triCount": 61434
+    },
+    {
+      "clusterCount": 254,
+      "triCount": 30592
+    },
+    {
+      "clusterCount": 131,
+      "triCount": 15192
+    },
+    {
+      "clusterCount": 50,
+      "triCount": 5942
+    },
+    {
+      "clusterCount": 26,
+      "triCount": 2942
+    },
+    {
+      "clusterCount": 12,
+      "triCount": 1466
+    },
+    {
+      "clusterCount": 6,
+      "triCount": 724
+    },
+    {
+      "clusterCount": 3,
+      "triCount": 360
+    },
+    {
+      "clusterCount": 2,
+      "triCount": 180
+    },
+    {
+      "clusterCount": 1,
+      "triCount": 90
+    }
+  ],
+  "rootClusterCount": 29,
+  "MAX_TRIS": 128,
+  "MAX_VERTS": 128,
+  "worldAABB": {
+    "minX": -80006.15625,
+    "minY": 1.1432949304580688,
+    "minZ": 29270.912109375,
+    "maxX": -76792.65625,
+    "maxY": 41.0012092590332,
+    "maxZ": 31130.5625
+  },
+  "indexType": "Uint8",
+  "clusterStrideBytes": 60,
+  "clusterLayout": {
+    "centerX": {
+      "offset": 0,
+      "type": "f32"
+    },
+    "centerY": {
+      "offset": 4,
+      "type": "f32"
+    },
+    "centerZ": {
+      "offset": 8,
+      "type": "f32"
+    },
+    "radius": {
+      "offset": 12,
+      "type": "f32"
+    },
+    "error": {
+      "offset": 16,
+      "type": "f32"
+    },
+    "parentCenterX": {
+      "offset": 20,
+      "type": "f32"
+    },
+    "parentCenterY": {
+      "offset": 24,
+      "type": "f32"
+    },
+    "parentCenterZ": {
+      "offset": 28,
+      "type": "f32"
+    },
+    "parentRadius": {
+      "offset": 32,
+      "type": "f32"
+    },
+    "parentError": {
+      "offset": 36,
+      "type": "f32",
+      "note": "Infinity for root clusters"
+    },
+    "vtxOffset": {
+      "offset": 40,
+      "type": "u32"
+    },
+    "vtxCount": {
+      "offset": 44,
+      "type": "u32"
+    },
+    "idxOffset": {
+      "offset": 48,
+      "type": "u32"
+    },
+    "triCount": {
+      "offset": 52,
+      "type": "u32"
+    },
+    "lod": {
+      "offset": 56,
+      "type": "u32"
+    }
+  },
+  "vertexLayout": {
+    "description": "Packed Float32 XYZ interleaved, stride 12 bytes",
+    "x": {
+      "offset": 0,
+      "type": "f32"
+    },
+    "y": {
+      "offset": 4,
+      "type": "f32"
+    },
+    "z": {
+      "offset": 8,
+      "type": "f32"
+    }
+  },
+  "indexLayout": {
+    "description": "Uint8 local triangle indices, 3 per triangle. Index is local to the cluster (relative to vtxOffset in vertices.bin). All clusters have ≤128 verts so Uint8 is sufficient."
+  },
+  "bakeDate": "2026-06-20",
+  "source": "tools/crete/bake-nanite.ts T2"
+}
